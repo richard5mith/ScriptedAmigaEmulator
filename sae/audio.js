@@ -27,6 +27,10 @@ var SAER_Audio_deactivate = null;
 
 /*---------------------------------*/
 
+// Resolve relative to this script, including when embedded below a subdirectory.
+const SAEC_Audio_Worklet_URL = typeof document !== 'undefined' && document.currentScript
+  ? new URL('audio-worklet.js', document.currentScript.src).href : 'sae/audio-worklet.js';
+
 function SAEO_Audio() {
 	const PAULA_FREQ_PAL = SAEC_Playfield_CLOCK_PAL / 123;
 	const PAULA_FREQ_NTSC = SAEC_Playfield_CLOCK_NTSC / 124;
@@ -34,6 +38,7 @@ function SAEO_Audio() {
 	var driver = {
 		context:null,
 		processor:null,
+		worklet:false,
 		connected:false
 	};
 
@@ -266,6 +271,7 @@ function SAEO_Audio() {
 			SAEF_log("audio.pause_sound()");
 
 			paused = true;
+			worklet_state();
 			//disconnect_sound();
 			//driver.context.suspend().then(function() { SAEF_log("audio.pause_sound() ...done"); });
 		}
@@ -278,15 +284,18 @@ function SAEO_Audio() {
 			//connect_sound();
 			//driver.context.resume().then(function() { SAEF_log("audio.resume_sound() ...done"); });
 			paused = false;
+			cache.readoffset = cache.writeoffset;
 			cache.wait = true;
+			worklet_state();
 		}
 	}
 
 	/*-----------------------------------------------------------------------*/
 
 	function connect_sound() {
-		if (!driver.connected) {
-			driver.processor.onaudioprocess = process_sound_buffer_webaudio;
+		if (driver.processor && !driver.connected) {
+			if (!driver.worklet) driver.processor.onaudioprocess = process_sound_buffer_webaudio;
+			else worklet_state();
 			driver.processor.connect(driver.context.destination);
 			driver.connected = true;
 		}
@@ -295,17 +304,23 @@ function SAEO_Audio() {
 	function disconnect_sound() {
 		if (driver.connected) {
 			driver.processor.disconnect(driver.context.destination);
-			driver.processor.onaudioprocess = function(e) {};
+			if (!driver.worklet) driver.processor.onaudioprocess = null;
 			driver.connected = false;
 		}
 	}
 
+	function worklet_state() {
+		if (driver.worklet && driver.processor)
+			driver.processor.port.postMessage({type:'state',paused:paused,muted:muted});
+	}
+
 	function open_sound() {
 		driver.context = null;
+		driver.processor = null;
+		driver.worklet = driver.connected = false;
 		try {
 			var AudioContextDriver = window.webkitAudioContext || window.AudioContext;
 			driver.context = new AudioContextDriver();
-			driver.processor = driver.context.createScriptProcessor(paula.frames, SAEV_config.audio.channels, SAEV_config.audio.channels);
 		} catch (e) {
 			if (driver.context) driver.context.close().then(function() {});
 			return false;
@@ -329,11 +344,49 @@ function SAEO_Audio() {
 				scale.buffer[j] = new Int16Array(scale.frames);
 		}
 
-		connect_sound();
 		have_sound = true;
+		const context = driver.context, channels = SAEV_config.audio.channels, frames = paula.frames;
+		function legacy_output(error) {
+			if (driver.context !== context || !have_sound) return;
+			if (error) SAEF_warn('audio: AudioWorklet unavailable; using legacy output (%s)', String(error));
+			disconnect_sound();
+			if (driver.worklet && driver.processor) {
+				driver.processor.onprocessorerror = null;
+				driver.processor.port.onmessage = null;
+				driver.processor.port.close();
+			}
+			driver.worklet = false;
+			try {
+				driver.processor = context.createScriptProcessor(frames, channels, channels);
+				connect_sound();
+			} catch (failure) {
+				SAEF_warn('audio: Could not open audio output (%s)', String(failure));
+				close_sound();
+			}
+		}
+		if (context.audioWorklet && typeof AudioWorkletNode !== 'undefined') {
+			context.audioWorklet.addModule(SAEC_Audio_Worklet_URL).then(function() {
+				if (driver.context !== context || !have_sound) return;
+				const node = new AudioWorkletNode(context, 'sae-audio-output', {
+					numberOfInputs:0, numberOfOutputs:1, outputChannelCount:[channels],
+					processorOptions:{frames:frames,channels:channels}
+				});
+				driver.processor = node;driver.worklet = true;
+				node.port.onmessage = function(event) {
+					if (driver.context !== context || driver.processor !== node || event.data.type !== 'request') return;
+					const buffers = Array.from({length:channels}, function() { return new Float32Array(frames); });
+					if (!paused) process_sound_buffer_webaudio({outputBuffer:{length:frames,getChannelData:function(ch) { return buffers[ch]; }}});
+					node.port.postMessage({type:'samples',epoch:event.data.epoch,channels:buffers}, buffers.map(function(b) { return b.buffer; }));
+				};
+				node.onprocessorerror = function() { legacy_output('processor stopped'); };
+				connect_sound();
+			}).catch(legacy_output);
+		} else legacy_output();
+		// Covers autoplay suspension when the browser permits this launch gesture.
+		context.resume().catch(function() {});
 
-		SAEF_info("sae.audio() %d channels, frequency %d/%d Hz, %d frames", SAEV_config.audio.channels, used_freq, driver.context.sampleRate, paula.frames);
-		return true;
+		SAEF_info("sae.audio() %d channels, frequency %d/%d Hz, %d frames", SAEV_config.audio.channels, used_freq, context.sampleRate, paula.frames);
+		return have_sound;
 	}
 
 	function close_sound() {
@@ -343,12 +396,15 @@ function SAEO_Audio() {
 			SAEF_log("audio.close_sound() initialised...");
 
 			disconnect_sound();
-			if (driver.context.close) {
-				driver.context.close().then(function() {
-					driver.context = null;
-					SAEF_log("audio.close_sound() ...done");
-				});
+			const context = driver.context;
+			if (driver.worklet && driver.processor) {
+				driver.processor.onprocessorerror = null;
+				driver.processor.port.onmessage = null;
+				driver.processor.port.close();
 			}
+			driver.context = driver.processor = null;
+			driver.worklet = false;
+			if (context && context.close) context.close().catch(function() {});
 			paused = false;
 			have_sound = false;
 		}
@@ -390,10 +446,12 @@ function SAEO_Audio() {
 		cache.wait = true;
 
 		paula.average.clr();
+		worklet_state();
 	}
 
 	function mute_sound(mute) { //OWN
 		muted = mute;
+		worklet_state();
 	}
 
 	/*-----------------------------------------------------------------------*/
@@ -1749,15 +1807,15 @@ function SAEO_Audio() {
 		},
 		functions: function() { return {
 			cachediff,cachewrite,cacheread,scaleplay,process_sound_buffer_webaudio,
-			finish_sound_buffer_webaudio,pause_sound,resume_sound,connect_sound,disconnect_sound,open_sound,
-			close_sound,obtain_sound,setup_sound,cleanup_sound,reset_sound,mute_sound,audio_channel_data,
-			filter_state,filter,clear_sound_buffers,finish_sound_buffer,check_sound_buffers,
-			put_sound_word_right,put_sound_word_left,anti_prehandler,samplexx_anti_handler,
-			sample16_mono_handler,sample16i_anti_mono_handler,sample16i_rh_mono_handler,
-			sample16i_crux_mono_handler,sample16s_handler,sample16si_anti_handler,sample16si_rh_handler,
-			sample16si_crux_handler,zerostate,schedule_audio,audio_event_reset,audio_deactivate,
-			audio_activate,isirq,setirq,newsample,setdr,loaddat,loadper,audio_state_channel2,
-			audio_state_channel,rc_calculate_a0,
+			finish_sound_buffer_webaudio,pause_sound,resume_sound,connect_sound,disconnect_sound,
+			worklet_state,open_sound,close_sound,obtain_sound,setup_sound,cleanup_sound,reset_sound,
+			mute_sound,audio_channel_data,filter_state,filter,clear_sound_buffers,finish_sound_buffer,
+			check_sound_buffers,put_sound_word_right,put_sound_word_left,anti_prehandler,
+			samplexx_anti_handler,sample16_mono_handler,sample16i_anti_mono_handler,
+			sample16i_rh_mono_handler,sample16i_crux_mono_handler,sample16s_handler,sample16si_anti_handler,
+			sample16si_rh_handler,sample16si_crux_handler,zerostate,schedule_audio,audio_event_reset,
+			audio_deactivate,audio_activate,isirq,setirq,newsample,setdr,loaddat,loadper,
+			audio_state_channel2,audio_state_channel,rc_calculate_a0,
 		}; },
 		constants: function() { return {
 			PAULA_FREQ_PAL,PAULA_FREQ_NTSC,CACHE_FRAMES_MULT,SCALE_FRAMES_MULT,SOUND_SYNC_MULTIPLIER,

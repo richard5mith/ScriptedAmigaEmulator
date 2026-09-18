@@ -36,6 +36,8 @@ fills the browser page; click it again to restore the player size.
 For CRT scanlines, phosphor texture and softened colour, choose **Display & sound →
 Picture → CRT (S-Video)**. This optional WebGL display filter works with both
 emulator renderers and falls back to the normal picture if unavailable.
+Audio uses AudioWorklet on supported browsers (localhost or HTTPS), with legacy
+ScriptProcessor output as a fallback.
 Multi-disk games have a disk selector while playing. Favorites, recent
 plays and preferences are saved in the browser.
 
