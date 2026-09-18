@@ -73,7 +73,11 @@ The launcher shows when disk changes have been stored and waits for pending
 storage writes when returning to the library.
 
 In a game's settings, **Saved games** offers **Export backup** and **Import backup**
-using `.saesave` files. Backups contain modified disk images. Browser storage is
+using `.saesave` files. **Delete stored data** removes that game's browser-stored
+disks, including saved progress and crash dumps, after confirmation. The next
+launch uses fresh disks from the original game files. Exported backups and other
+games are kept. Close the game in other launcher tabs before deleting its data.
+Backups contain modified disk images. Browser storage is
 specific to the browser profile and site address; clearing site data removes
 saves. Export backups before clearing data, switching browsers or changing the
 server address. Source archives and files in games/ are never modified.
@@ -145,4 +149,5 @@ protected-disk formats.
 The optional browser integration test is `node tests/saves.browser.cjs`. It needs
 Playwright, Python, and local Qwak/BIOS files. Set `PLAYWRIGHT_MODULE` and
 `CHROMIUM_EXECUTABLE` when they are installed outside this project. It verifies
-real disk writes, page reload restoration, backup download and stale-write rejection.
+real disk writes, page reload restoration, backup download, deletion and cancellation,
+running-game protection, fresh launch after deletion, and stale-write rejection.

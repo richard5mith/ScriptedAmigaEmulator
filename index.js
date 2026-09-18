@@ -273,9 +273,11 @@
   }
   async function updateSaveSummary(game) {
     $('saveSummary').textContent='Checking saves…';
+    $('deleteSaves').disabled=true;
     try{const records=await (await saveStore()).list(game.id);if(settingsGame!==game)return;
       $('saveSummary').textContent=records.length?'Saved '+new Date(Math.max(...records.map(r=>r.updatedAt))).toLocaleString():'No saved disk changes yet.';
-    }catch(error){$('saveSummary').textContent='Save storage unavailable: '+error.message;}
+      $('deleteSaves').disabled=!records.length;
+    }catch(error){if(settingsGame===game)$('saveSummary').textContent='Save storage unavailable: '+error.message;}
   }
   async function downloadSaves(records,title) {
     const blob=await SAESaves.exportFile(records,title),url=URL.createObjectURL(blob),link=document.createElement('a');
@@ -283,6 +285,18 @@
   }
   $('exportSaves').onclick=async()=>{try{const game=settingsGame;await downloadSaves(await(await saveStore()).list(game.id),game.title);}catch(error){toast(error.message);}};
   $('importSaves').onclick=()=>$('saveInput').click();
+  $('deleteSaves').onclick=async()=>{
+    const game=settingsGame;if(!game)return;
+    if(!confirm('Delete stored data for '+game.title+'?\n\nThis removes all saved progress and crash dumps from this game’s browser-stored disks. Original game files and exported backups are kept.'))return;
+    let release;$('deleteSaves').disabled=true;
+    try{
+      if(current?.game.id===game.id)throw new Error('Close this game before deleting its stored data.');
+      release=await SAESaves.lock(game.id);
+      await(await saveStore()).clearGame(game.id);
+      toast('Stored data deleted. The next launch starts fresh.');
+    }catch(error){toast(error.message);}
+    finally{release?.();if(settingsGame===game)await updateSaveSummary(game);}
+  };
   $('saveInput').onchange=async event=>{
     const file=event.target.files[0],game=settingsGame;event.target.value='';if(!file||!game)return;let release;
     try{release=await SAESaves.lock(game.id);await SAESaves.importFile(file,game.id,await saveStore());await updateSaveSummary(game);toast('Save backup imported.');}

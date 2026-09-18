@@ -18,6 +18,13 @@ var SAESaves = (function() {
     constructor(db){this.db=db;db.onversionchange=()=>db.close();}
     read(key){return this.transaction('readonly',store=>store.get(key));}
     list(gameId){return this.transaction('readonly',store=>store.index('gameId').getAll(gameId));}
+    clearGame(gameId){return new Promise((resolve,reject)=>{
+      const tx=this.db.transaction('media','readwrite'),store=tx.objectStore('media');
+      const request=store.index('gameId').openKeyCursor(IDBKeyRange.only(gameId));
+      request.onsuccess=()=>{const cursor=request.result;if(cursor){store.delete(cursor.primaryKey);cursor.continue();}};
+      tx.oncomplete=()=>resolve();tx.onerror=()=>{};
+      tx.onabort=()=>reject(tx.error||new Error('Could not delete stored game data.'));
+    });}
     transaction(mode,action){return new Promise((resolve,reject)=>{
       const tx=this.db.transaction('media',mode),request=action(tx.objectStore('media'));let value;
       if(request)request.onsuccess=()=>value=request.result;
@@ -58,7 +65,7 @@ var SAESaves = (function() {
       if(!item){
         const record=await this.store.read(key);
         if(record && (!(record.data instanceof Uint8Array)||record.data.length>LIMIT||record.baseHash!==baseHash||await hash(record.data)!==record.hash))
-          throw new Error('The stored save is damaged. Import a backup before playing.');
+          throw new Error('The stored save is damaged. Import a backup or delete stored data in this game’s settings.');
         item={key,gameId:this.gameId,medium,baseHash,name:record?.name||image.name,data:record?record.data.slice():image.data,version:0,saved:0,revision:record?.revision||0,updatedAt:record?.updatedAt||0};
         this.media.set(key,item);
         if(record)this.changed('restored',record.updatedAt);

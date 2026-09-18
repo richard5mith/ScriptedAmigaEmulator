@@ -35,6 +35,30 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
   await page.locator('#gameSaves summary').click();
   await page.waitForFunction(()=>document.querySelector('#saveSummary').textContent.startsWith('Saved '));
   const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export backup',exact:true}).click();assert.equal((await download).suggestedFilename(),'Qwak.saesave');
+  const gameId=await page.evaluate(async()=>{
+    const store=await SAESaves.open();
+    const records=await new Promise((resolve,reject)=>{const r=store.db.transaction('media').objectStore('media').getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+    const record=records.find(r=>r.name==='Qwak.hdf');
+    await store.replace([{...record,key:'other-game-disk',gameId:'other-game'}]);
+    window.testDeleteLock=await SAESaves.lock(record.gameId);
+    return record.gameId;
+  });
+  // Cancelling preserves saves. Another open game session also prevents deletion.
+  page.once('dialog',dialog=>dialog.dismiss());await page.getByRole('button',{name:'Delete stored data',exact:true}).click();
+  assert.equal(await page.evaluate(async id=>(await(await SAESaves.open()).list(id)).length,gameId),1);
+  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete stored data',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('another tab'));
+  assert.equal(await page.evaluate(async id=>(await(await SAESaves.open()).list(id)).length,gameId),1);
+  await page.evaluate(()=>window.testDeleteLock());
+  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete stored data',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#saveSummary').textContent==='No saved disk changes yet.');
+  assert.equal(await page.getByRole('button',{name:'Delete stored data',exact:true}).isDisabled(),true);
+  assert.equal(await page.evaluate(async id=>(await(await SAESaves.open()).list(id)).length,gameId),0);
+  assert.equal(await page.evaluate(async()=>(await(await SAESaves.open()).list('other-game')).length),1);
+  await library();await play();
+  assert.notDeepEqual(await page.evaluate(()=>Array.from(SAEV_config.mount.config[0].ci.file.data.slice(-8))),marker);
+  assert.notEqual(await page.locator('#saveStatus').textContent(),'Saved disk restored');
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
   // The real IndexedDB backend rejects stale writers and preserves the winner.
   await page.evaluate(async()=>{
     const store=await SAESaves.open(),a=new SAESaves.Session(store,'conflict-test'),b=new SAESaves.Session(store,'conflict-test');
@@ -46,6 +70,6 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
     if((await store.list('conflict-test'))[0].data[0]!==1)throw new Error('Stale write replaced save');
     a.close();b.close();
   });
-  assert.deepEqual(errors,[]);console.log('PASS real disk write, IndexedDB, stop/relaunch, page reload, backup download, conflict protection');
+  assert.deepEqual(errors,[]);console.log('PASS real disk write, IndexedDB, stop/relaunch, backup, deletion/cancel/lock/isolation/fresh launch, conflict protection');
  }finally{if(browser)await browser.close();server.kill();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
