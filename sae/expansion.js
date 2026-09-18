@@ -1567,4 +1567,63 @@ function SAEO_Expansion() {
 		return NULL;
 	}
 	#endif*/
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			cards,vi,ecard,cardno,cardid,expamem,expamem_lo,expamem_hi,expamem_z2_pointer,expamem_z2_size,
+			expamem_z3_pointer,expamem_z3_size,expamem_z3_sum,expamem_board_size,expamem_board_pointer,
+			expamem_bank_current,z3hack_override,fastmem_bank,z3fastmem_bank,expamem_bank,expamemz3_bank,
+		}; },
+		set: function(s) {
+			cards=s.cards;
+			vi=s.vi;
+			ecard=s.ecard;
+			cardno=s.cardno;
+			cardid=s.cardid;
+			expamem=s.expamem;
+			expamem_lo=s.expamem_lo;
+			expamem_hi=s.expamem_hi;
+			expamem_z2_pointer=s.expamem_z2_pointer;
+			expamem_z2_size=s.expamem_z2_size;
+			expamem_z3_pointer=s.expamem_z3_pointer;
+			expamem_z3_size=s.expamem_z3_size;
+			expamem_z3_sum=s.expamem_z3_sum;
+			expamem_board_size=s.expamem_board_size;
+			expamem_board_pointer=s.expamem_board_pointer;
+			expamem_bank_current=s.expamem_bank_current;
+			z3hack_override=s.z3hack_override;
+			fastmem_bank=s.fastmem_bank;
+			z3fastmem_bank=s.z3fastmem_bank;
+			expamem_bank=s.expamem_bank;
+			expamemz3_bank=s.expamemz3_bank;
+		},
+		functions: function() { return {
+			card_data,isnonautoconfig,expamem_z3hack,expamem_map_clear,expamem_init_clear,
+			expamem_init_clear_zero,expamem_init_clear2,expamem_init_last,expamem_read,expamem_write,
+			expamem_type,call_card_init,boardmessage,expamem_shutup,expamem_next,fastmem_get32,fastmem_get16,
+			fastmem_get8,fastmem_put32,fastmem_put16,fastmem_put8,fastmem_check,fastmem_xlate,
+			fastmem_autoconfig,expamem_map_fastcard_2,expamem_init_fastcard_2,expamem_init_fastcard,
+			expamem_map_fastcard,expamem_map_z3fastmem_2,expamem_map_z3fastmem,expamem_init_z3fastmem_2,
+			expamem_init_z3fastmem,z3fastmem_get32,z3fastmem_get16,z3fastmem_get8,z3fastmem_put32,
+			z3fastmem_put16,z3fastmem_put8,z3fastmem_check,z3fastmem_xlate,mapped_malloc,mapped_free,
+			free_fastmemory,mapped_malloc_dynamic,allocate,clear_bank,expamem_get32,expamem_get16,
+			expamem_get8,expamem_put32,expamem_put16,expamem_put8,expamemz3_get8,expamemz3_get16,
+			expamemz3_get32,expamemz3_put8,expamemz3_put16,expamemz3_put32,
+		}; },
+		constants: function() { return {
+			BOARD_AUTOCONFIG_Z2,BOARD_AUTOCONFIG_Z3,BOARD_NONAUTOCONFIG_BEFORE,BOARD_NONAUTOCONFIG_AFTER_Z2,
+			BOARD_NONAUTOCONFIG_AFTER_Z3,BOARD_IGNORE,MAX_EXPANSION_BOARD_SPACE,Z2_MEM_8MB,Z2_MEM_4MB,
+			Z2_MEM_2MB,Z2_MEM_1MB,Z2_MEM_512KB,Z2_MEM_256KB,Z2_MEM_128KB,Z2_MEM_64KB,Z3_MEM_16MB,Z3_MEM_32MB,
+			Z3_MEM_64MB,Z3_MEM_128MB,Z3_MEM_256MB,Z3_MEM_512MB,Z3_MEM_1GB,chainedconfig,rom_card,add_memory,
+			protoautoconfig,zorroII,zorroIII,commodore_g,commodore,gvp,ass,hackers_id,commodore_a2091,
+			commodore_a2091_ram,commodore_a2232,ass_nexus_scsi,gvp_series_2_scsi,gvp_iv_24_gfx,
+			Z3_SS_MEM_SAME,Z3_SS_MEM_AUTO,Z3_SS_MEM_64KB,Z3_SS_MEM_128KB,Z3_SS_MEM_256KB,Z3_SS_MEM_512KB,
+			Z3_SS_MEM_1MB,Z3_SS_MEM_2MB,Z3_SS_MEM_4MB,Z3_SS_MEM_6MB,Z3_SS_MEM_8MB,Z3_SS_MEM_10MB,
+			Z3_SS_MEM_12MB,Z3_SS_MEM_14MB,Z3_SS_MEM_defunct1,Z3_SS_MEM_defunct2,force_z3,ext_size,no_shutup,
+			care_addr,enable_irq,reset_card,card_int2,card_irq6,card_irq7,does_irq,rom_4bit,rom_8bit,
+			rom_16bit,rom_never,rom_install,rom_binddrv,Z3BASE_UAE,Z3BASE_REAL,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

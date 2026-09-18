@@ -239,4 +239,23 @@ function SAEO_Dongle() {
 		//memset (oldcia, 0, sizeof oldcia);
 		//for (var i = 0; i < 16; i++) oldcia[0][i] = oldcia[1][i] = 0;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			flag,cycles,
+		}; },
+		set: function(s) {
+			flag=s.flag;
+			cycles=s.cycles;
+		},
+		functions: function() { return {
+
+		}; },
+		constants: function() { return {
+			NONE,ROBOCOP3,LEADERBOARD,BAT2,ITALY90,DAMESGRANDMAITRE,RUGBYCOACH,CRICKETCAPTAIN,LEVIATHAN,
+			LOGISTIX,CYCLE_UNIT_200,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

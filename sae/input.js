@@ -133,6 +133,25 @@ function SAEO_Mouse(port) {
 			el.onmousemove = function(e) {};
 		}
 	};
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			prt,lx,ly,
+		}; },
+		set: function(s) {
+			prt=s.prt;
+			lx=s.lx;
+			ly=s.ly;
+		},
+		functions: function() { return {
+			moveNormal,moveLocked,
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 function SAEO_Joystick(port) {
@@ -244,6 +263,27 @@ function SAEO_Joystick(port) {
 		this.disable();
 		numButtons = numAxes = 0;
 	};
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			prt,numButtons,numAxes,buttons,direction,
+		}; },
+		set: function(s) {
+			prt=s.prt;
+			numButtons=s.numButtons;
+			numAxes=s.numAxes;
+			buttons=s.buttons;
+			direction=s.direction;
+		},
+		functions: function() { return {
+			pollGamepad,
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 function SAEO_Keyboard() {
@@ -1075,6 +1115,41 @@ function SAEO_Keyboard() {
 	this.keyPress = function(e, down) {
 		newHandleKey(e, down);
 	};
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			keyBuf,state,code,first,last,capsLock,
+		}; },
+		set: function(s) {
+			keyBuf=s.keyBuf;
+			state=s.state;
+			code=s.code;
+			first=s.first;
+			last=s.last;
+			capsLock=s.capsLock;
+		},
+		functions: function() { return {
+			keydown,keyup,recordKey,code2rawkey,newProcessKey,newHandleKey,
+		}; },
+		constants: function() { return {
+			RAWKEY_TILDE,RAWKEY_1,RAWKEY_2,RAWKEY_3,RAWKEY_4,RAWKEY_5,RAWKEY_6,RAWKEY_7,RAWKEY_8,RAWKEY_9,
+			RAWKEY_0,RAWKEY_MINUS,RAWKEY_EQUAL,RAWKEY_BACKSLASH,RAWKEY_KP_0,RAWKEY_Q,RAWKEY_W,RAWKEY_E,
+			RAWKEY_R,RAWKEY_T,RAWKEY_Y,RAWKEY_U,RAWKEY_I,RAWKEY_O,RAWKEY_P,RAWKEY_LBRACKET,RAWKEY_RBRACKET,
+			RAWKEY_KP_1,RAWKEY_KP_2,RAWKEY_KP_3,RAWKEY_A,RAWKEY_S,RAWKEY_D,RAWKEY_F,RAWKEY_G,RAWKEY_H,
+			RAWKEY_J,RAWKEY_K,RAWKEY_L,RAWKEY_SEMICOLON,RAWKEY_QUOTE,RAWKEY_KP_4,RAWKEY_KP_5,RAWKEY_KP_6,
+			RAWKEY_LESSGREATER,RAWKEY_Z,RAWKEY_X,RAWKEY_C,RAWKEY_V,RAWKEY_B,RAWKEY_N,RAWKEY_M,RAWKEY_COMMA,
+			RAWKEY_PERIOD,RAWKEY_SLASH,RAWKEY_KP_DECIMAL,RAWKEY_KP_7,RAWKEY_KP_8,RAWKEY_KP_9,RAWKEY_SPACE,
+			RAWKEY_BACKSPACE,RAWKEY_TAB,RAWKEY_KP_ENTER,RAWKEY_RETURN,RAWKEY_ESCAPE,RAWKEY_DELETE,
+			RAWKEY_INSERT,RAWKEY_PAGEUP,RAWKEY_PAGEDOWN,RAWKEY_KP_MINUS,RAWKEY_UP,RAWKEY_DOWN,RAWKEY_RIGHT,
+			RAWKEY_LEFT,RAWKEY_F1,RAWKEY_F2,RAWKEY_F3,RAWKEY_F4,RAWKEY_F5,RAWKEY_F6,RAWKEY_F7,RAWKEY_F8,
+			RAWKEY_F9,RAWKEY_F10,RAWKEY_KP_DIVIDE,RAWKEY_KP_MULTIPLY,RAWKEY_KP_PLUS,RAWKEY_HELP,
+			RAWKEY_LSHIFT,RAWKEY_RSHIFT,RAWKEY_CAPSLOCK,RAWKEY_CONTROL,RAWKEY_LALT,RAWKEY_RALT,RAWKEY_LAMIGA,
+			RAWKEY_RAMIGA,RAWKEY_SCRLOCK,RAWKEY_PRTSCREEN,RAWKEY_NUMLOCK,RAWKEY_PAUSE,RAWKEY_HOME,RAWKEY_END,
+			KEYBUFSIZE,USECAPTURE,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 function SAEO_Input() {
@@ -2010,4 +2085,47 @@ function SAEO_Input() {
 		//SAER.dongle.joytest(v); /* empty */
 		//SAEF_log("Input.JOYTEST() %04x", v);
 	};
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			mouse_x,mouse_y,mouse_frame_x,mouse_frame_y,mouse_delta,mouse_deltanoreset,joybutton,joydir,
+			joydirpot,oleft,oright,otop,obot,horizclear,vertclear,mouse_port,analog_port,digital_port,
+			potgo_value,pot_cap,pot_dat,pot_dat_act,input_vpos,input_frame,input_queue,
+		}; },
+		set: function(s) {
+			mouse_x=s.mouse_x;
+			mouse_y=s.mouse_y;
+			mouse_frame_x=s.mouse_frame_x;
+			mouse_frame_y=s.mouse_frame_y;
+			mouse_delta=s.mouse_delta;
+			mouse_deltanoreset=s.mouse_deltanoreset;
+			joybutton=s.joybutton;
+			joydir=s.joydir;
+			joydirpot=s.joydirpot;
+			oleft=s.oleft;
+			oright=s.oright;
+			otop=s.otop;
+			obot=s.obot;
+			horizclear=s.horizclear;
+			vertclear=s.vertclear;
+			mouse_port=s.mouse_port;
+			analog_port=s.analog_port;
+			digital_port=s.digital_port;
+			potgo_value=s.potgo_value;
+			pot_cap=s.pot_cap;
+			pot_dat=s.pot_dat;
+			pot_dat_act=s.pot_dat_act;
+			input_vpos=s.input_vpos;
+			input_frame=s.input_frame;
+			input_queue=s.input_queue;
+		},
+		functions: function() { return {
+			input_queue_struct,cap_check,getvelocity,mouseupdate,readinput,joymousecounter,integrateEvent,
+		}; },
+		constants: function() { return {
+			POTDAT_DELAY_PAL,POTDAT_DELAY_NTSC,INPUT_QUEUE_SIZE,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

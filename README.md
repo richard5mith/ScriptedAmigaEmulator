@@ -74,7 +74,7 @@ storage writes when returning to the library.
 
 In a game's settings, **Saved games** offers **Export backup** and **Import backup**
 using `.saesave` files. **Delete stored data** removes that game's browser-stored
-disks, including saved progress and crash dumps, after confirmation. The next
+disks and saved position, including saved progress and crash dumps, after confirmation. The next
 launch uses fresh disks from the original game files. Exported backups and other
 games are kept. Close the game in other launcher tabs before deleting its data.
 Backups contain modified disk images. Browser storage is
@@ -90,8 +90,17 @@ Retry and Export backup actions; pending changes stay in memory for recovery.
 Concurrent tabs cannot play the same game when Web Locks is available; IndexedDB
 revision checks also prevent a stale writer from overwriting newer saves.
 
-Exact-position snapshots are not implemented. Disk saves do not capture running
-RAM, CPU registers or chipset state. See [snapshot requirements](docs/save-states.md).
+**Back to library** now offers **Yes, and save state**, **Yes and don't save state**,
+or **No, continue playing**. A save state captures the whole running machine and
+its matching disks. Next time, choose **Continue playing** to resume that position
+or **Start normally** to boot with your usual disk saves. Quitting without saving a
+new state retains any older checkpoint.
+
+Game settings also offer **Delete saved position**, which keeps ordinary disk
+saves. Checkpoints are local to this browser and are not included in `.saesave`
+disk backups. They require the same emulator build, settings, ROM and game media;
+incompatible checkpoints are rejected. There is no automatic checkpoint when
+closing the tab. See [save-state details and tests](docs/save-states.md).
 
 ## Archive limits
 

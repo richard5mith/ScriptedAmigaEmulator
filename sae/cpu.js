@@ -10228,4 +10228,124 @@ function SAEO_CPU() {
 
 		return true;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			last_op_for_exception_3,last_addr_for_exception_3,last_fault_for_exception_3,
+			last_writeaccess_for_exception_3,last_instructionaccess_for_exception_3,
+			last_notinstruction_for_exception_3,exception_in_exception,bus_error_offset,caches020,vi,
+			icaches030,dcaches030,fake_srp_030_hi,fake_srp_030_lo,fake_crp_030_hi,fake_crp_030_lo,
+			fake_tt0_030,fake_tt1_030,fake_tc_030,fake_mmusr_030,regs,cycles_mult,cpucycleunit,cpu_cycles,
+			illegal_warned,pc_offset,coreGetPC,coreSetPC,coreSyncPC,coreNext16,coreNext32,coreGetInst16,
+			coreGetInst32,coreGet8,coreGet16,coreGet32,corePut8,corePut16,corePut32,model,
+		}; },
+		set: function(s) {
+			last_op_for_exception_3=s.last_op_for_exception_3;
+			last_addr_for_exception_3=s.last_addr_for_exception_3;
+			last_fault_for_exception_3=s.last_fault_for_exception_3;
+			last_writeaccess_for_exception_3=s.last_writeaccess_for_exception_3;
+			last_instructionaccess_for_exception_3=s.last_instructionaccess_for_exception_3;
+			last_notinstruction_for_exception_3=s.last_notinstruction_for_exception_3;
+			exception_in_exception=s.exception_in_exception;
+			bus_error_offset=s.bus_error_offset;
+			caches020=s.caches020;
+			vi=s.vi;
+			icaches030=s.icaches030;
+			dcaches030=s.dcaches030;
+			fake_srp_030_hi=s.fake_srp_030_hi;
+			fake_srp_030_lo=s.fake_srp_030_lo;
+			fake_crp_030_hi=s.fake_crp_030_hi;
+			fake_crp_030_lo=s.fake_crp_030_lo;
+			fake_tt0_030=s.fake_tt0_030;
+			fake_tt1_030=s.fake_tt1_030;
+			fake_tc_030=s.fake_tc_030;
+			fake_mmusr_030=s.fake_mmusr_030;
+			regs=s.regs;
+			cycles_mult=s.cycles_mult;
+			cpucycleunit=s.cpucycleunit;
+			cpu_cycles=s.cpu_cycles;
+			illegal_warned=s.illegal_warned;
+			pc_offset=s.pc_offset;
+			coreGetPC=s.coreGetPC;
+			coreSetPC=s.coreSetPC;
+			coreSyncPC=s.coreSyncPC;
+			coreNext16=s.coreNext16;
+			coreNext32=s.coreNext32;
+			coreGetInst16=s.coreGetInst16;
+			coreGetInst32=s.coreGetInst32;
+			coreGet8=s.coreGet8;
+			coreGet16=s.coreGet16;
+			coreGet32=s.coreGet32;
+			corePut8=s.corePut8;
+			corePut16=s.corePut16;
+			corePut32=s.corePut32;
+			model=s.model;
+		},
+		functions: function() { return {
+			Exception23,cache020,cache030,regstruct,dump_cache,flush_caches,coreSetCaches,fill_icache020,
+			getcache030,update_cache030,fill_icache030,read_dcache030x,write_dcache030x,cancache030,
+			read_dcache030,get32_dcache030,get16_dcache030,get8_dcache030,write_dcache030,put32_dcache030,
+			put16_dcache030,put8_dcache030,getInst16_icache020_prefetch,getInst32_icache020_prefetch,
+			getInst16_icache030_prefetch,getInst32_icache030_prefetch,fill_prefetch_020,fill_prefetch_030,
+			fill_prefetch,setPC,getPC,incPC,syncPC,setPCi,getPCi,incPCi,getPC_prefetch,setPC_prefetch,
+			syncPC_prefetch,syncPC_icache020_prefetch,syncPC_icache030_prefetch,nextInst16_default,
+			nextInst32_default,getInst16_default,getInst32_default,getInst16_prefetch,getInst32_prefetch,
+			nextInst16_prefetch,nextInst32_prefetch,get8_prefetch,get16_prefetch,get32_prefetch,
+			put8_prefetch,put16_prefetch,put32_prefetch,nextInst16_icache020_prefetch,
+			nextInst32_icache020_prefetch,nextInst16_icache030_prefetch,nextInst32_icache030_prefetch,
+			setup_functions,coreReset,coreStop,coreGetCCR,coreSetCCR,coreGetSR,coreSetSR,exception_trace,
+			exception_pc,add_approximate_exception_cycles,add_approximate_exception_cycles_020,exception,
+			coreException,exception3f,exception3_notinstruction,exception3i,coreException3i,munge24,in_rom,
+			in_rtarea,illegal,coreIllegal,update_cycles,adjust_cycles,bus_error,runPrefetch000,
+			runPrefetch020,runNormal,mul64,divu64,bfName,getBitfield,putBitfield,movecRegName,movecValid,
+			movec2C,movecC2,mmu_op30fake_pmove,mmu_op30fake_ptest,mmu_op30fake_pflush,mmu_op30,regs_da_def,
+			config_da_def,setPC_da,getPC_da,incPC_da,syncPC_da,get16_da,get32_da,next16_da,next32_da,szChr,
+			printMovec,printMovem,printMul64,printDiv64,printMMU,printII,printEA,printI2,printI,fixup_da,
+			stackPut16,stackPut32,stackGet16,stackGet32,castByte,castWord,castLong,extByteToWord,extByte,
+			extWord,add32,sub32,flgAdd,flgSub,flgCmp,flgNeg,flgLogical,I_EXG_DD,I_EXG_AA,I_EXG_DA,I_LEA,
+			I_PEA,I_LINK,I_LINK_32,I_UNLK,I_MOVE_8,I_MOVE_16,I_MOVE_32,I_MOVEA_16,I_MOVEA_32,I_MOVEQ,
+			I_MOVEM_R2M_16,I_MOVEM_R2M_32,I_MOVEM_M2R_16,I_MOVEM_M2R_32,I_MOVEP_R2M_16,I_MOVEP_R2M_32,
+			I_MOVEP_M2R_16,I_MOVEP_M2R_32,I_ADD_ED_32,I_ADD_DE_32,I_ADD_ED_16,I_ADD_DE_16,I_ADD_ED_8,
+			I_ADD_DE_8,I_SUB_ED_32,I_SUB_DE_32,I_SUB_ED_16,I_SUB_DE_16,I_SUB_ED_8,I_SUB_DE_8,I_CMP_32,
+			I_CMP_16,I_CMP_8,I_CLR_32,I_CLR_16,I_CLR_8,I_NEG_D_32,I_NEG_D_16,I_NEG_D_8,I_NEG_E_32,I_NEG_E_16,
+			I_NEG_E_8,I_MULS,I_MULU,I_MULx,I_DIVS,I_DIVU,I_DIVx,I_ADDX_D_32,I_ADDX_D_16,I_ADDX_D_8,
+			I_ADDX_M_32,I_ADDX_M_16,I_ADDX_M_8,I_SUBX_D_32,I_SUBX_D_16,I_SUBX_D_8,I_SUBX_M_32,I_SUBX_M_16,
+			I_SUBX_M_8,I_NEGX_D_32,I_NEGX_D_16,I_NEGX_D_8,I_NEGX_E_32,I_NEGX_E_16,I_NEGX_E_8,I_ADDA_32,
+			I_ADDA_16,I_SUBA_32,I_SUBA_16,I_CMPA_32,I_CMPA_16,I_ADDI_D_32,I_ADDI_D_16,I_ADDI_D_8,I_ADDI_E_32,
+			I_ADDI_E_16,I_ADDI_E_8,I_SUBI_D_32,I_SUBI_D_16,I_SUBI_D_8,I_SUBI_E_32,I_SUBI_E_16,I_SUBI_E_8,
+			I_CMPI_32,I_CMPI_16,I_CMPI_8,I_ADDQ_D_32,I_ADDQ_A_32,I_ADDQ_E_32,I_ADDQ_D_16,I_ADDQ_E_16,
+			I_ADDQ_D_8,I_ADDQ_E_8,I_SUBQ_D_32,I_SUBQ_A_32,I_SUBQ_E_32,I_SUBQ_D_16,I_SUBQ_E_16,I_SUBQ_D_8,
+			I_SUBQ_E_8,I_CMPM_32,I_CMPM_16,I_CMPM_8,I_EXT_16,I_EXT_32,I_EXTB,I_AND_D_32,I_AND_D_16,I_AND_D_8,
+			I_AND_E_32,I_AND_E_16,I_AND_E_8,I_EOR_D_32,I_EOR_D_16,I_EOR_D_8,I_EOR_E_32,I_EOR_E_16,I_EOR_E_8,
+			I_NOT_D_32,I_NOT_D_16,I_NOT_D_8,I_NOT_E_32,I_NOT_E_16,I_NOT_E_8,I_OR_D_32,I_OR_D_16,I_OR_D_8,
+			I_OR_E_32,I_OR_E_16,I_OR_E_8,I_ANDI_D_32,I_ANDI_D_16,I_ANDI_D_8,I_ANDI_E_32,I_ANDI_E_16,
+			I_ANDI_E_8,I_EORI_D_32,I_EORI_D_16,I_EORI_D_8,I_EORI_E_32,I_EORI_E_16,I_EORI_E_8,I_ORI_D_32,
+			I_ORI_D_16,I_ORI_D_8,I_ORI_E_32,I_ORI_E_16,I_ORI_E_8,I_ASL_32,I_ASL_16,I_ASL_8,I_ASR_32,I_ASR_16,
+			I_ASR_8,I_ASL_M,I_ASR_M,I_LSL_32,I_LSL_16,I_LSL_8,I_LSR_32,I_LSR_16,I_LSR_8,I_LSL_M,I_LSR_M,
+			I_ROL_32,I_ROL_16,I_ROL_8,I_ROR_32,I_ROR_16,I_ROR_8,I_ROL_M,I_ROR_M,I_ROXL_32,I_ROXL_16,I_ROXL_8,
+			I_ROXR_32,I_ROXR_16,I_ROXR_8,I_ROXL_M,I_ROXR_M,I_SWAP,I_BCHG_DD_32,I_BCHG_DE_8,I_BCHG_ID_32,
+			I_BCHG_IE_8,I_BCLR_DD_32,I_BCLR_DE_8,I_BCLR_ID_32,I_BCLR_IE_8,I_BSET_DD_32,I_BSET_DE_8,
+			I_BSET_ID_32,I_BSET_IE_8,I_BTST_DD_32,I_BTST_DE_8,I_BTST_ID_32,I_BTST_IE_8,I_BFXXX,I_ABCD_D,
+			I_ABCD_A,I_SBCD_D,I_SBCD_A,I_NBCD_D,I_NBCD_E,I_PACK_D,I_PACK_A,I_UNPK_D,I_UNPK_A,I_Bcc,I_DBcc,
+			I_Scc,I_BRA,I_BSR,I_JMP,I_JSR,I_NOP,I_RTD,I_RTR,I_RTS,I_TST_8,I_TST_16,I_TST_32,I_ANDI_CCR,
+			I_EORI_CCR,I_ORI_CCR,I_MOVE_2CCR,I_MOVE_CCR2,I_ANDI_SR,I_EORI_SR,I_ORI_SR,I_MOVE_2SR,I_MOVE_SR2,
+			I_MOVE_USP2A,I_MOVE_A2USP,I_MOVE_2C,I_MOVE_C2,I_MOVES_32,I_MOVES_16,I_MOVES_8,I_BKPT,I_CHK_16,
+			I_CHK_32,I_CHK2_32,I_CHK2_16,I_CHK2_8,I_ILLEGAL,I_RESET,I_RTE,I_STOP,I_TRAP,I_TRAPCC,I_TRAPCC_16,
+			I_TRAPCC_32,I_TRAPV,I_CAS_32,I_CAS_16,I_CAS_8,I_CAS2_32,I_CAS2_16,I_TAS,I_CALLM,I_RTM,I_MMU,
+			I_cpBcc,I_cpDBcc,I_cpGEN,I_cpRESTORE,I_cpSAVE,I_cpScc,I_cpTRAPcc,ILLEGAL,mkCCTab,exII,mkEATabs,
+			getEAMode,isEA,getEACycs,addCycs,mkI,mkDiss,mkITab,
+		}; },
+		constants: function() { return {
+			CACR020_C,CACR020_CE,CACR020_F,CACR020_E,CACR020_RMASK,CACR020_WMASK,CACHELINES020,
+			CACHELINE020_IM,CACHELINE020_TM,CACR030_WA,CACR030_DBE,CACR030_CD,CACR030_CED,CACR030_FD,
+			CACR030_ED,CACR030_IBE,CACR030_CI,CACR030_CEI,CACR030_FI,CACR030_EI,CACR030_RMASK,CACR030_WMASK,
+			CACHELINES030,CACHELINE030_IM,CACHELINE030_TM,CYCLES_DIV,PC_OFFSET,M_rdd,M_rda,M_ria,M_ripo,
+			M_ripr,M_rid,M_rii,M_pcid,M_pcii,M_absw,M_absl,M_imm,ccNames,ID_BFCHG,ID_BFCLR,ID_BFEXTS,
+			ID_BFEXTU,ID_BFFFO,ID_BFINS,ID_BFSET,ID_BFTST,MMUOP_DEBUG,D_RDD,D_RDA,D_RIPR,D_RIPO,D_RID,D_IMD,
+			D_IME,D_IME_DP,D_EA,D_CCR,D_SR,D_USP,D_EXT_BITFIELD,D_EXT_MOVEM,D_EXT_MOVEC,D_EXT_MUL64,
+			D_EXT_DIV64,D_EXT_MMU,aIncDec,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

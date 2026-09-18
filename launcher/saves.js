@@ -7,8 +7,8 @@ var SAESaves = (function() {
   }
   function open() {
     return new Promise((resolve,reject)=>{
-      const request=indexedDB.open(DATABASE,1);
-      request.onupgradeneeded=()=>{const store=request.result.createObjectStore('media',{keyPath:'key'});store.createIndex('gameId','gameId');};
+      const request=indexedDB.open(DATABASE,2);
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('media')){const store=db.createObjectStore('media',{keyPath:'key'});store.createIndex('gameId','gameId');}if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'gameId'});};
       request.onerror=()=>reject(request.error);
       request.onblocked=()=>reject(new Error('Close other launcher tabs to open game saves.'));
       request.onsuccess=()=>resolve(new Store(request.result));
@@ -19,11 +19,24 @@ var SAESaves = (function() {
     read(key){return this.transaction('readonly',store=>store.get(key));}
     list(gameId){return this.transaction('readonly',store=>store.index('gameId').getAll(gameId));}
     clearGame(gameId){return new Promise((resolve,reject)=>{
-      const tx=this.db.transaction('media','readwrite'),store=tx.objectStore('media');
+      const tx=this.db.transaction(['media','states'],'readwrite'),store=tx.objectStore('media');
+      tx.objectStore('states').delete(gameId);
       const request=store.index('gameId').openKeyCursor(IDBKeyRange.only(gameId));
       request.onsuccess=()=>{const cursor=request.result;if(cursor){store.delete(cursor.primaryKey);cursor.continue();}};
       tx.oncomplete=()=>resolve();tx.onerror=()=>{};
       tx.onabort=()=>reject(tx.error||new Error('Could not delete stored game data.'));
+    });}
+    state(gameId){return this.stateTransaction('readonly',store=>store.get(gameId));}
+    saveState(record,expected=0){return new Promise((resolve,reject)=>{
+      const tx=this.db.transaction('states','readwrite'),store=tx.objectStore('states'),request=store.get(record.gameId);let conflict=false;
+      request.onsuccess=()=>{if((request.result?.revision||0)!==expected){conflict=true;tx.abort();return;}store.put({...record,revision:expected+1});};
+      tx.oncomplete=()=>resolve();tx.onerror=()=>{};tx.onabort=()=>reject(conflict?new Error('A newer position was saved in another tab.'):tx.error||new Error('Could not store save state.'));
+    });}
+    deleteState(gameId){return this.stateTransaction('readwrite',store=>store.delete(gameId));}
+    stateTransaction(mode,action){return new Promise((resolve,reject)=>{
+      const tx=this.db.transaction('states',mode),request=action(tx.objectStore('states'));let value;
+      request.onsuccess=()=>value=request.result;tx.oncomplete=()=>resolve(value);tx.onerror=()=>{};
+      tx.onabort=()=>reject(tx.error||new Error('Could not store save state.'));
     });}
     transaction(mode,action){return new Promise((resolve,reject)=>{
       const tx=this.db.transaction('media',mode),request=action(tx.objectStore('media'));let value;
@@ -59,14 +72,16 @@ var SAESaves = (function() {
   class Session {
     constructor(store,gameId,changed=()=>{}){this.store=store;this.gameId=gameId;this.changed=changed;this.media=new Map();this.timer=null;this.pending=null;this.closed=false;this.error=null;}
     get dirty(){return [...this.media.values()].some(item=>item.version!==item.saved);}
-    async mount(image,medium,readonly=false) {
+    async mount(image,medium,readonly=false,checkpoint=null) {
       const baseHash=await hash(image.data),key=JSON.stringify([this.gameId,medium,baseHash]);
       let item=this.media.get(key);
       if(!item){
-        const record=await this.store.read(key);
+        const existing=await this.store.read(key);
+        const record=checkpoint?checkpoint.find(r=>r.key===key):existing;
+        if(checkpoint&&!record)throw new Error('This save state uses different game files. Start normally instead.');
         if(record && (!(record.data instanceof Uint8Array)||record.data.length>LIMIT||record.baseHash!==baseHash||await hash(record.data)!==record.hash))
           throw new Error('The stored save is damaged. Import a backup or delete stored data in this game’s settings.');
-        item={key,gameId:this.gameId,medium,baseHash,name:record?.name||image.name,data:record?record.data.slice():image.data,version:0,saved:0,revision:record?.revision||0,updatedAt:record?.updatedAt||0};
+        item={key,gameId:this.gameId,medium,baseHash,name:record?.name||image.name,data:record?record.data.slice():image.data,version:0,saved:0,revision:existing?.revision||0,updatedAt:record?.updatedAt||0};
         this.media.set(key,item);
         if(record)this.changed('restored',record.updatedAt);
       }
@@ -97,6 +112,25 @@ var SAESaves = (function() {
       if(this.dirty)return this.flush();
     }
     close(){this.closed=true;if(this.timer)clearTimeout(this.timer);this.timer=null;}
+    async checkpointMedia(){
+      const records=[];
+      for(const item of this.media.values()){const data=item.data.slice();records.push({key:item.key,gameId:item.gameId,medium:item.medium,baseHash:item.baseHash,name:item.name,data,hash:await hash(data)});}
+      return records;
+    }
+    async stageCheckpoint(records){
+      if(!Array.isArray(records)||!records.length||records.length>100)throw new Error('Invalid checkpoint disks.');
+      const staged=new Map();let bytes=0;
+      for(const record of records){
+        if(record.gameId!==this.gameId||record.key!==JSON.stringify([this.gameId,record.medium,record.baseHash])||!(record.data instanceof Uint8Array)||(bytes+=record.data.length)>LIMIT||await hash(record.data)!==record.hash||staged.has(record.key))throw new Error('The checkpoint disks are damaged.');
+        const existing=await this.store.read(record.key);
+        staged.set(record.key,{...record,data:record.data.slice(),version:0,saved:0,revision:existing?.revision||0,updatedAt:0});
+      }
+      this.staged=staged;
+    }
+    adoptCheckpoint(){
+      for(const [key,item]of this.staged||[])if(!this.media.has(key))this.media.set(key,item);
+      this.staged=null;for(const item of this.media.values())item.version++;
+    }
     async records(){
       const records=new Map((await this.store.list(this.gameId)).map(r=>[r.key,r]));
       for(const item of this.media.values())if(item.version!==item.saved){const data=item.data.slice();records.set(item.key,{key:item.key,gameId:item.gameId,medium:item.medium,baseHash:item.baseHash,name:item.name,data,hash:await hash(data),updatedAt:Date.now(),revision:item.revision});}

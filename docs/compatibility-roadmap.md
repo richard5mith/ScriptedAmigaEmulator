@@ -8,7 +8,7 @@ several independent subsystems. Archive loading alone cannot fix these.
 | ZIP, ADZ, HDZ | Implemented in frontend file preparation, with corruption checks and explicit limits. |
 | LHA/LZH | Implemented for header levels 0–3 and lh0/lh4–lh7/lz4. Add legacy adaptive Huffman methods only with independent archive fixtures. |
 | WHDLoad | Bootable FFS generation and an A1200 launcher. Qwak ZIP and Turrican LHA boot verified; expand the game regression set, import icon tooltypes, add configurable slave options. Persistent disk saves and backup export/import are implemented. |
-| Exact-position snapshots | Not implemented: requires versioned CPU, memory, device and scheduler state capture/restore. See [save-states.md](save-states.md). |
+| Exact-position snapshots | Implemented: explicit quit/save choice and fresh-page restore of CPU, memory, device, scheduler and matching disk state. Default A1200 Qwak, Turrican and both SWOS career reloads verified; expand the hardware/game matrix. See [save-states.md](save-states.md). |
 | Blitter timing | Plain, disjoint A-to-D copies now advance by rows instead of writing the whole job at completion, fixing a SWOS career setup buffer race. Other modes still use the existing approximation; full bus arbitration remains future work. See [trace and regression coverage](swos-blitter.md). |
 | 68000/68010 prefetch | Replace the fake prefetch model with tested instruction-fetch behavior; include self-modifying-code cases. |
 | BKPT, CALLM, RTM | Instruction handlers exist as incomplete stubs in sae/cpu.js. Implement from processor manuals with register, exception, and bus-behavior tests. Do not silently treat a stub as a working instruction. |

@@ -1,32 +1,109 @@
 # Exact-position resume
 
-Status: not implemented. Persistent disk saves are implemented separately in
-`launcher/saves.js`. They survive reload but do not resume a running machine.
+The launcher stores one full machine checkpoint per game in IndexedDB. **Back to
+library** pauses the machine and offers:
 
-The SAE core has no state capture/restore API. Most device state is held in private
-closures, and RAM alone is insufficient. A reliable snapshot needs:
+- **Yes, and save state** — replace the checkpoint, then quit after storage commits.
+- **Yes and don't save state** — quit, retaining any older checkpoint. Normal disk
+  writes are still saved.
+- **No, continue playing** — return to the game, preserving its previous pause state.
 
-- CPU registers, flags, supervisor state, PC, prefetch and pending exceptions.
-- Chip/fast/slow RAM, memory maps, ROM identity and expansion state.
-- Chipset registers and DMA progress: copper, blitter, display, audio and interrupts.
-- CIA timers and ports, RTC, input state, floppy mechanics/DMA and IDE commands.
-- Cycle counters, pending emulated events and their ordering.
-- Mounted media identities plus an immutable copy of disk changes at capture time.
+The next launch offers **Continue playing** or **Start normally**, with the saved
+time shown. Starting normally uses normal persistent disk saves. Resuming uses the
+checkpoint's matching disks, including disks ejected earlier in the session; this
+can roll disk contents back to the saved position.
 
-Capture must happen at a defined instruction/frame boundary with the machine
-paused and disk writes quiescent. Restore must validate the emulator state-format
-version, ROM hashes, configuration and media before changing a running machine.
-Host timers, audio devices, DOM/canvas objects and pointer lock must be recreated,
-not serialized. A failed restore must leave disk saves and prior snapshots intact.
+**Delete saved position** in a game's settings removes only its checkpoint.
+**Delete stored data** removes its checkpoint and disk saves together. `.saesave`
+exports remain disk backups; they do not contain machine checkpoints. Checkpoints
+belong to the browser profile and origin. There is no automatic checkpoint on tab
+closure, and no periodic checkpointing.
 
-The launcher flow should offer **Continue from last position** or **Start normally**
-only for validated snapshots. Starting normally retains in-game disk saves.
-Returning to the library should atomically commit a snapshot and its disk image
-revision; periodic checkpoints are needed because browsers cannot guarantee an
-asynchronous capture will complete during tab closure.
+## Capture and restore
 
-Acceptance requires actual continuation after a fresh page load: compare CPU/RAM
-and device state at the capture boundary, then verify subsequent execution,
-input, audio and new disk writes. Cover paused games, pending interrupts, active
-DMA, disk access, PAL/NTSC and supported machine models. A screenshot, RAM dump
-or saved disk image must not be presented as a working save-state feature.
+`sae/state.js` captures the machine after the CPU has acknowledged pause. The
+current instruction and JavaScript device callbacks have returned, and guest
+writes are quiescent. It includes:
+
+- CPU registers, flags, PC, prefetch/cache contents, exception and halt state.
+- RAM, ROM bytes, memory maps and expansion state.
+- Chipset registers, copper state, pending blitter rows, drawing/DMA state, Paula
+  channels, CIA timers, interrupts and input queues.
+- Floppy mechanics/track buffers, IDE commands/sector buffers, mounted media and
+  file seek positions.
+- Emulated clocks, pending event callbacks and event ordering.
+
+The graph codec preserves cycles, typed-array buffer aliases and references shared
+between globals and private device fields. Closure-backed devices keep their fresh
+live instances. Read-only lookup tables retain their identities. Callbacks are
+resolved against named functions and deterministic paths in the initialized core;
+no executable code is stored or evaluated. Unknown callbacks cause a visible save
+error, not an incomplete checkpoint.
+
+`tools/generate-state-access.cjs` generates explicit, non-enumerable getters and
+setters in the core constructors. Its reviewed exclusion list omits browser audio
+resources, host sample queues, animation-frame IDs, wall-clock pacing and derived
+CPU tables. DOM/canvas/WebGL resources and pointer lock are recreated by normal
+startup. Restore runs after device reset and `custom_prepare`, before the first
+guest instruction. Audio rate and renderer must match.
+
+The launcher validates the core build fingerprint, schema, settings, ROM SHA-256
+and original prepared media hashes. Compressed machine data has a SHA-256 checksum;
+checkpoint disk copies have individual checksums. All graph references and device
+schemas are decoded/validated before setters run. Failure stops the fresh machine
+and leaves prior stored disks and checkpoints intact.
+
+`launcher/checkpoints.js` stores gzip-compressed data and requires browser
+CompressionStream/DecompressionStream support. Immutable copies of the machine and
+matching disks are committed in one IndexedDB record. A failed replacement leaves
+the old record intact and the game paused for retry or continuation. Web Locks and
+revision checks protect against competing tabs. After successful restore, mounted
+file callbacks target the new persistence session, so subsequent writes still save.
+
+## Maintaining the schema
+
+After changing a core state field, callback or immutable table, regenerate:
+
+```sh
+# TypeScript is a development dependency only; install/provide it on NODE_PATH.
+node tools/generate-state-access.cjs
+node tools/generate-state-access.cjs --check
+```
+
+`SAE_TYPESCRIPT` can instead point to an installed TypeScript module. The generator
+also updates `sae/state-globals.js` with a hash of core sources. Changed core builds
+reject older checkpoints rather than guessing how private fields have changed.
+Ordinary disk saves remain usable. Do not add a mutable object to the immutable
+constant registry; review the exclusion list whenever host/device state changes.
+
+## Verification
+
+`node --test tests/*.test.cjs` covers graph aliasing/cycles, closure rebinding,
+immutable table identities, special numeric values, compressed integrity, missing
+callbacks/fields, checkpoint disk adoption and a partially completed blit restored
+into a fresh device with the correct final interrupt.
+
+`tests/state.browser.cjs` uses local game/BIOS fixtures and an isolated Chromium
+profile. It exercises the real UI and reloads the page between capture and restore.
+It compares CPU/RAM/clocks at the pre-instruction boundary, then runs the restored
+machine, uses controls, writes through the restored disk handle, and checks normal
+launch, pause preservation, storage failure, deletion and stale writer rejection.
+It also compares CIA, copper, blitter, Paula and scheduler fields.
+
+```sh
+PLAYWRIGHT_MODULE=/path/to/playwright \
+CHROMIUM_EXECUTABLE=/path/to/chromium node tests/state.browser.cjs
+
+# Installed game fixtures are not distributed with the tests.
+STATE_GAME='Sensible World Of Soccer 97-98' STATE_BOOT_MS=35000 STATE_CAREER=1 \
+PLAYWRIGHT_MODULE=/path/to/playwright \
+CHROMIUM_EXECUTABLE=/path/to/chromium node tests/state.browser.cjs
+```
+
+Validated with Qwak ZIP, Turrican LHA, and SWOS 96–97 and 97–98 LHA careers on
+the default PAL A1200, including continued menu input and disk writes after a fresh
+page load. Qwak also passes with NTSC and Canvas rendering. The disk-save browser
+test verifies the version-one database upgrade. Corrupt checkpoints, quota failure,
+stale writers and checkpoint-only deletion have separate checks. This is not an
+exhaustive compatibility claim for every CPU, chipset mode or protected floppy
+format; existing emulator limitations still apply.

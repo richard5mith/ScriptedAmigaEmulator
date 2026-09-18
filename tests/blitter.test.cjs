@@ -60,7 +60,7 @@ function machine({immediate = false} = {}) {
   while (pending) {assert.ok(count++ < 10000, 'blit must finish'); step();}
  }
  return {ctx, blitter, memory, copy, step, advance, finish,
-  get pending() {return pending;}, get interrupts() {return interrupts;},
+  restorePending(value) {pending=value;}, get pending() {return pending;}, get interrupts() {return interrupts;},
   get copperNotifications() {return copperNotifications;}};
 }
 
@@ -144,4 +144,25 @@ test('immediate mode remains immediate and schedules no delayed rows', () => {
  assert.equal(m.pending, null);
  assert.deepEqual(Array.from(m.memory.slice(0x200, 0x210)), Array(16).fill(85));
  assert.equal(m.interrupts, 1);
+});
+
+test('a checkpoint resumes a partially completed blit in a fresh device',()=>{
+ const codec=require('../sae/state.js'),old=machine(),fresh=machine();
+ function registry(m){
+  const reg={functions:new Map(),byName:new Map(),anchors:new Map([[m.blitter,'blitter']]),byAnchor:new Map([['blitter',m.blitter]]),externals:new Map(),byExternal:new Map()};
+  for(const [key,fn]of Object.entries(m.blitter._saeState.functions())){reg.functions.set(fn,'local/'+key);reg.byName.set('local/'+key,fn);}
+  for(const [key,fn]of Object.entries(m.blitter))if(typeof fn==='function'){reg.functions.set(fn,key);reg.byName.set(key,fn);}
+  function constant(value,name){if(!value||typeof value!=='object'||reg.externals.has(value))return;reg.externals.set(value,name);reg.byExternal.set(name,value);for(const key of Object.keys(value))constant(value[key],name+'/'+key);}
+  for(const [key,value]of Object.entries(m.blitter._saeState.constants()))constant(value,key);
+  const seen=new Set();function functions(value,path){if(typeof value==='function'){if(!reg.functions.has(value)){reg.functions.set(value,path);reg.byName.set(path,value);}return;}if(!value||typeof value!=='object'||seen.has(value)||ArrayBuffer.isView(value))return;seen.add(value);for(const key of Object.keys(value))functions(value[key],path+'/'+key);}
+  functions(m.blitter._saeState.get(),'private');return reg;
+ }
+ old.memory.fill(0x55,0x100,0x110);old.copy();old.step();old.memory[0x200]=0x77;
+ const globals=Object.fromEntries(Object.keys(old.ctx).filter(k=>k.startsWith('SAEV_')&&k!=='SAEV_config').map(k=>[k,old.ctx[k]]));
+ const snapshot=codec.encode({blitter:old.blitter,memory:old.memory,pending:old.pending,globals,info:old.ctx.SAER_Blitter_blt_info},registry(old));
+ const decoded=codec.decode(snapshot,registry(fresh));decoded.commit();const state=decoded.result;
+ Object.assign(fresh.ctx,state.globals);fresh.ctx.SAER_Memory_chipData=state.memory;fresh.ctx.SAER_Blitter_blt_info=state.info;fresh.restorePending(state.pending);
+ assert.equal(fresh.blitter._saeState.get().copy_rows_remaining,3);fresh.finish();
+ assert.equal(state.memory[0x200],0x77);assert.deepEqual(Array.from(state.memory.slice(0x204,0x210)),Array(12).fill(85));
+ assert.equal(fresh.interrupts,1);assert.equal(fresh.ctx.SAEV_Events_currcycle,16*512);
 });

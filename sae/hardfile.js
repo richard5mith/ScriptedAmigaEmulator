@@ -1336,4 +1336,25 @@ function SAEO_Hardfile() {
 	/*-----------------------------------------------------------------------*/
 
 	this.reset = function() {} //hardfile_reset()
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+
+		}; },
+		set: function(s) {
+
+		},
+		functions: function() { return {
+			getchsgeometry,getchspgeometry,getchshd,gl,rl,pl,ps,rdb_crc,create_virtual_rdb,hdf_open,
+			hdf_close,vhd_checksum,vhd_read,vhd_write_enlarge,vhd_write,hdf_read2,hdf_write2,hdf_cache_read,
+			hdf_cache_write,hdf_init_cache,hdf_flush_cache,adide_decode,adide_encode,hdf_byteswap,
+			hardfilehandle,hdf_open_target,freehandle,hdf_close_target,hdf_resize_target,hdf_seek,poscheck,
+			isincache,hdf_read_target_2,hdf_read_target,hdf_write_target_2,hdf_write_target,
+		}; },
+		constants: function() { return {
+			HFD_VHD_FIXED,HFD_VHD_DYNAMIC,CACHE_SIZE,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

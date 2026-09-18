@@ -1496,4 +1496,29 @@ function SAEO_IDE() {
 			ide.its = its;
 		}
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+
+		}; },
+		set: function(s) {
+
+		},
+		functions: function() { return {
+			ide_registers,ide_hdf,pw,ps,ide_grow_buffer,ide_interrupt_do,ide_interrupt,ide_fast_interrupt,
+			ide_fail_err,ide_fail,ide_data_ready,ide_recalibrate,ide_identify_drive,set_signature,
+			reset_device,ide_execute_drive_diagnostics,ide_initialize_drive_parameters,ide_set_multiple_mode,
+			ide_set_features,get_nsec,dec_nsec,get_lbachs,put_lbachs,check_maxtransfer,setdrq,setbsy,
+			process_rw_command,process_packet_command,do_process_rw_command,ide_read_sectors,
+			ide_write_sectors,ide_do_command,ide_get_data_2,ide_put_data_2,
+		}; },
+		constants: function() { return {
+			IDE_LOG,IDE_DATA,IDE_ERROR,IDE_NSECTOR,IDE_SECTOR,IDE_LCYL,IDE_HCYL,IDE_SELECT,IDE_STATUS,
+			IDE_SECONDARY,IDE_DEVCON,IDE_DRVADDR,IDE_STATUS_ERR,IDE_STATUS_IDX,IDE_STATUS_DRQ,IDE_STATUS_DSC,
+			IDE_STATUS_DRDY,IDE_STATUS_BSY,IDE_ERR_UNC,IDE_ERR_MC,IDE_ERR_IDNF,IDE_ERR_MCR,IDE_ERR_ABRT,
+			IDE_ERR_NM,ATAPI_ERR_EOM,ATAPI_ERR_ILI,MAX_IDE_MULTIPLE_SECTORS,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

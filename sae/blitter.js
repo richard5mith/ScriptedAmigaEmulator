@@ -3926,4 +3926,133 @@ function SAEO_Blitter() {
 		}
 		if (totald != 0) b.blitzero = 0;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			blt_info,blitter_cycle_exact,immediate_blits,blt_statefile_type,bltcon0,bltcon1,bltapt,bltbpt,
+			bltcpt,bltdpt,bltptx,bltptxpos,bltptxc,blitter_nasty,original_ch,original_fill,original_line,
+			blinea_shift,blinea,blineb,blitline,blitfc,blitfill,blitife,blitsing,blitdesc,blitline_started,
+			blitonedot,blitsign,blitlinepixel,blit_add,blit_modadda,blit_modaddb,blit_modaddc,blit_modaddd,
+			blit_ch,blitter_dontdo,blitter_delayed_debug,blit_func_tab,blit_filltable,blit_masktable,
+			blit_cyclecounter,blit_waitcyclecounter,blit_maxcyclecounter,blit_slowdown,
+			blit_totalcyclecounter,blit_startcycles,blit_misscyclecounter,blit_firstline_cycles,
+			blit_first_cycle,blit_last_cycle,blit_dmacount,blit_dmacount2,blit_linecycles,blit_extracycles,
+			blit_nod,blit_diag,blit_diag_type,blit_frozen,blit_faulty,blit_final,blt_delayed_irq,ddat1,ddat2,
+			ddat1use,ddat2use,preva,prevb,last_blitter_hpos,blitter_cyclecounter,blitter_hcounter1,
+			blitter_hcounter2,blitter_vcounter1,blitter_vcounter2,blitter_stuck,oddfstrt,oddfstop,ototal,
+			ofree,slow,changetable,freezes,warned1,warned2,copy_rows_remaining,copy_row_cycles,
+		}; },
+		set: function(s) {
+			blt_info=s.blt_info;
+			blitter_cycle_exact=s.blitter_cycle_exact;
+			immediate_blits=s.immediate_blits;
+			blt_statefile_type=s.blt_statefile_type;
+			bltcon0=s.bltcon0;
+			bltcon1=s.bltcon1;
+			bltapt=s.bltapt;
+			bltbpt=s.bltbpt;
+			bltcpt=s.bltcpt;
+			bltdpt=s.bltdpt;
+			bltptx=s.bltptx;
+			bltptxpos=s.bltptxpos;
+			bltptxc=s.bltptxc;
+			blitter_nasty=s.blitter_nasty;
+			original_ch=s.original_ch;
+			original_fill=s.original_fill;
+			original_line=s.original_line;
+			blinea_shift=s.blinea_shift;
+			blinea=s.blinea;
+			blineb=s.blineb;
+			blitline=s.blitline;
+			blitfc=s.blitfc;
+			blitfill=s.blitfill;
+			blitife=s.blitife;
+			blitsing=s.blitsing;
+			blitdesc=s.blitdesc;
+			blitline_started=s.blitline_started;
+			blitonedot=s.blitonedot;
+			blitsign=s.blitsign;
+			blitlinepixel=s.blitlinepixel;
+			blit_add=s.blit_add;
+			blit_modadda=s.blit_modadda;
+			blit_modaddb=s.blit_modaddb;
+			blit_modaddc=s.blit_modaddc;
+			blit_modaddd=s.blit_modaddd;
+			blit_ch=s.blit_ch;
+			blitter_dontdo=s.blitter_dontdo;
+			blitter_delayed_debug=s.blitter_delayed_debug;
+			blit_func_tab=s.blit_func_tab;
+			blit_filltable=s.blit_filltable;
+			blit_masktable=s.blit_masktable;
+			blit_cyclecounter=s.blit_cyclecounter;
+			blit_waitcyclecounter=s.blit_waitcyclecounter;
+			blit_maxcyclecounter=s.blit_maxcyclecounter;
+			blit_slowdown=s.blit_slowdown;
+			blit_totalcyclecounter=s.blit_totalcyclecounter;
+			blit_startcycles=s.blit_startcycles;
+			blit_misscyclecounter=s.blit_misscyclecounter;
+			blit_firstline_cycles=s.blit_firstline_cycles;
+			blit_first_cycle=s.blit_first_cycle;
+			blit_last_cycle=s.blit_last_cycle;
+			blit_dmacount=s.blit_dmacount;
+			blit_dmacount2=s.blit_dmacount2;
+			blit_linecycles=s.blit_linecycles;
+			blit_extracycles=s.blit_extracycles;
+			blit_nod=s.blit_nod;
+			blit_diag=s.blit_diag;
+			blit_diag_type=s.blit_diag_type;
+			blit_frozen=s.blit_frozen;
+			blit_faulty=s.blit_faulty;
+			blit_final=s.blit_final;
+			blt_delayed_irq=s.blt_delayed_irq;
+			ddat1=s.ddat1;
+			ddat2=s.ddat2;
+			ddat1use=s.ddat1use;
+			ddat2use=s.ddat2use;
+			preva=s.preva;
+			prevb=s.prevb;
+			last_blitter_hpos=s.last_blitter_hpos;
+			blitter_cyclecounter=s.blitter_cyclecounter;
+			blitter_hcounter1=s.blitter_hcounter1;
+			blitter_hcounter2=s.blitter_hcounter2;
+			blitter_vcounter1=s.blitter_vcounter1;
+			blitter_vcounter2=s.blitter_vcounter2;
+			blitter_stuck=s.blitter_stuck;
+			oddfstrt=s.oddfstrt;
+			oddfstop=s.oddfstop;
+			ototal=s.ototal;
+			ofree=s.ofree;
+			slow=s.slow;
+			changetable=s.changetable;
+			freezes=s.freezes;
+			warned1=s.warned1;
+			warned2=s.warned2;
+			copy_rows_remaining=s.copy_rows_remaining;
+			copy_row_cycles=s.copy_row_cycles;
+		},
+		functions: function() { return {
+			blitter_info,get_ch,channel_state,channel_pos,canblit,reset_channel_mods,check_channel_mods,
+			blitter_interrupt,blitter_done,blitter_dofast,blitter_dofast_desc,blitter_read,blitter_write,
+			blitter_line,blitter_line_proc,blitter_nxline,decide_blitter_line,actually_do_blit,blitter_doit,
+			blitter_doblit,blitter_doddma,blitter_dodma,do_startcycles,blitter_force_finish,blit_bltset,
+			blit_modset,reset_blit,waitingblits,blitter_start_init,do_blitter2,do_blitter,maybe_blit,
+			build_blitfilltable,build_blitfunctable,blitdofast_0,blitdofast_desc_0,blitdofast_a,
+			blitdofast_desc_a,blitdofast_2a,blitdofast_desc_2a,blitdofast_30,blitdofast_desc_30,
+			blitdofast_3a,blitdofast_desc_3a,blitdofast_3c,blitdofast_desc_3c,blitdofast_4a,
+			blitdofast_desc_4a,blitdofast_6a,blitdofast_desc_6a,blitdofast_8a,blitdofast_desc_8a,
+			blitdofast_8c,blitdofast_desc_8c,blitdofast_9a,blitdofast_desc_9a,blitdofast_a8,
+			blitdofast_desc_a8,blitdofast_aa,blitdofast_desc_aa,blitdofast_b1,blitdofast_desc_b1,
+			blitdofast_ca,blitdofast_desc_ca,blitdofast_cc,blitdofast_desc_cc,blitdofast_d8,
+			blitdofast_desc_d8,blitdofast_e2,blitdofast_desc_e2,blitdofast_ea,blitdofast_desc_ea,
+			blitdofast_f0,blitdofast_desc_f0,blitdofast_fa,blitdofast_desc_fa,blitdofast_fc,
+			blitdofast_desc_fc,
+		}; },
+		constants: function() { return {
+			blit_cycle_diagram,blit_cycle_diagram_fill,blit_cycle_diagram_line,blit_cycle_diagram_finald,
+			blit_cycle_diagram_finalld,DT_NONE,DT_BLOCK,DT_BLOCKFILL,DT_LINE,BLITTER_STARTUP_CYCLES,
+			blitfunc_dofast,blitfunc_dofast_desc,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

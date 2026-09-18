@@ -176,6 +176,7 @@
       const release=await SAESaves.lock(game.id);
       if(token!==launchToken){release();return;}active.release=release;
       active.saves=new SAESaves.Session(await saveStore(),game.id,(state,detail)=>saveStatus(active,state,detail));
+      const checkpoint=await(await saveStore()).state(game.id);active.stateRevision=checkpoint?.revision||0;
       if(token!==launchToken){active.saves.close();return;}
       const meta=await metadata(game);if(token!==launchToken)return;
       const rom=SAELibrary.chooseRom(system.roms,options.model,options.rom);
@@ -195,8 +196,24 @@
         for(const entry of entries)floppy.push(await SAELibrary.image(entry));
       }
       if(token!==launchToken)return;
-      if(hardfile)hardfile=await active.saves.mount(hardfile,'hardfile:'+selected.name,options.readonly);
-      floppy=await Promise.all(floppy.map(disk=>active.saves.mount(disk,'floppy:'+disk.name,options.readonly)));
+      const sourceMedia=hardfile?[await SAESaves.hash(hardfile.data)]:await Promise.all(meta.variants.map(async entry=>SAESaves.hash((await SAELibrary.image(entry)).data)));
+      active.identity=JSON.stringify({options,sourceMedia,rom:await SAESaves.hash(rom.data),build:SAEStateGlobals.build,version:SAEState.VERSION});
+      let resume=null;
+      if(checkpoint){
+        const compatible=checkpoint.identity===active.identity;
+        const decision=await chooseResume(checkpoint,compatible);
+        if(decision==='cancel'){await finishPlayer(token);return;}
+        if(decision==='resume')resume=checkpoint;
+      }
+      if(resume){
+        await active.saves.stageCheckpoint(resume.media);
+        if(floppy.length){
+          if(!Number.isInteger(resume.diskIndex)||!meta.variants[resume.diskIndex])throw new Error('The saved disk selection is missing.');
+          floppy[0]=await SAELibrary.image(meta.variants[resume.diskIndex]);active.diskIndex=resume.diskIndex;
+        }
+      }
+      if(hardfile)hardfile=await active.saves.mount(hardfile,'hardfile:'+selected.name,options.readonly,resume?.media);
+      floppy=await Promise.all(floppy.map(disk=>active.saves.mount(disk,'floppy:'+disk.name,options.readonly,resume?.media)));
       if(token!==launchToken)return;
       const cfg=SAESystem.configure(emulator,options,rom,system.key);
       if(hardfile){SAESystem.mount(cfg,hardfile.name,hardfile.data,options.readonly);SAESystem.attachMedia(cfg.mount.config[0].ci.file,hardfile);}
@@ -209,10 +226,14 @@
       };
       cfg.hook.event.stopped=()=>{active.running=false;finishPlayer(token);};
       cfg.hook.event.paused=paused=>{if(!current)return;paused=!!paused;current.paused=paused;$('pauseGame').setAttribute('aria-pressed',String(paused));$('pauseGame').setAttribute('aria-label',paused?'Resume game':'Pause game');$('pauseGame').title=paused?'Resume':'Pause';$('pauseGame').innerHTML=icon(paused?'play':'pause');};
+      SAEState.begin();
+      if(resume)SAEState.queue(await SAECheckpoint.unpack(resume.machine),()=>{
+        active.saves.adoptCheckpoint();active.saves.flush().catch(()=>{});
+      },error=>{game.error=error.message;notice('Couldn’t restore '+game.title+'.',error.message,'');});
       const error=emulator.start();if(error!==SAEE_None)throw new Error('Couldn’t start this game (code '+error+'). Check the ROM or try another Amiga model in game settings.');
     } catch(error) {
       if(token!==launchToken)return;
-      game.error=error.message;
+      SAEState.cancel();game.error=error.message;
       if(current?.running)stopGame();else finishPlayer(token);
       notice('Couldn’t start '+game.title+'.',error.message,/ROM|Kickstart|WHDLoad/.test(error.message)?'Add system files':'Game settings');
       $('noticeAction').onclick=()=>/ROM|Kickstart|WHDLoad/.test(error.message)?addSystemFiles():openSettings(game);
@@ -235,7 +256,52 @@
     if(current.paused)emulator.pause(false);
     const error=emulator.stop();if(error!==SAEE_None)finishPlayer(current.token);
   }
-  $('stopGame').onclick=stopGame;
+  function chooseResume(checkpoint,compatible){
+    return new Promise(resolve=>{
+      const dialog=$('resumeDialog');
+      $('resumeState').disabled=!compatible;
+      $('resumeDetail').textContent=compatible?'Saved '+new Date(checkpoint.updatedAt).toLocaleString():'This position uses different settings or emulator files. You can still start normally.';
+      const done=value=>{dialog.close();resolve(value);};
+      $('resumeState').onclick=()=>done('resume');$('resumeFresh').onclick=()=>done('fresh');$('resumeCancel').onclick=()=>done('cancel');
+      dialog.oncancel=event=>{event.preventDefault();done('cancel');};dialog.showModal();
+    });
+  }
+  async function pauseForState(active){
+    if(!active.running)throw new Error('The game is not running.');
+    const deadline=Date.now()+5000;
+    while(active.running&&!SAEState.ready){if(Date.now()>deadline)throw new Error('The game is still starting. Try again.');await new Promise(r=>setTimeout(r,20));}
+    if(!emulator.paused)emulator.pause(true);
+    while(current===active&&active.running&&!emulator.paused){if(Date.now()>deadline)throw new Error('The game did not pause. Try again.');await new Promise(r=>setTimeout(r,20));}
+    if(current!==active||!active.running)throw new Error('The game stopped before it could be saved.');
+  }
+  function quitBusy(busy){$('quitDialog').setAttribute('aria-busy',String(busy));for(const id of ['quitSave','quitDiscard','quitContinue'])$(id).disabled=busy;}
+  async function requestQuit(){
+    const active=current;if(!active||active.finishing||$('quitDialog').open)return;
+    if(!active.running){stopGame();return;}
+    active.wasPaused=active.paused;
+    document.exitPointerLock?.();$('quitError').hidden=true;quitBusy(true);$('quitDialog').showModal();
+    try{await pauseForState(active);quitBusy(false);$('quitContinue').focus();}
+    catch(error){$('quitError').textContent=error.message;$('quitError').hidden=false;quitBusy(false);$('quitSave').disabled=true;}
+  }
+  function continueGame(){
+    if($('quitContinue').disabled)return;
+    $('quitDialog').close();if(current?.running&&!current.wasPaused)emulator.pause(false);$('myVideo').focus();
+  }
+  $('quitDialog').addEventListener('cancel',event=>{event.preventDefault();continueGame();});
+  $('quitContinue').onclick=continueGame;
+  $('quitDiscard').onclick=()=>{$('quitDialog').close();stopGame();};
+  $('quitSave').onclick=async()=>{
+    const active=current;if(!active?.running)return;active.savingState=true;quitBusy(true);$('quitError').hidden=true;$('quitSave').textContent='Saving…';
+    try{
+      await pauseForState(active);await new Promise(r=>setTimeout(r,0));
+      const machine=SAEState.capture();
+      await active.saves.flush();const media=await active.saves.checkpointMedia();
+      await(await saveStore()).saveState({gameId:active.game.id,identity:active.identity,updatedAt:Date.now(),diskIndex:active.diskIndex,machine:await SAECheckpoint.pack(machine),media},active.stateRevision);
+      $('quitDialog').close();stopGame();
+    }catch(error){$('quitError').textContent='Could not save state: '+error.message;$('quitError').hidden=false;}
+    finally{active.savingState=false;quitBusy(false);$('quitSave').textContent='Yes, and save state';}
+  };
+  $('stopGame').onclick=requestQuit;
   // Escape belongs to mouse capture/fullscreen, never to stopping the game.
   $('playerDialog').addEventListener('cancel',event=>event.preventDefault());
   document.addEventListener('pointerlockchange',()=>{
@@ -244,7 +310,7 @@
     if(captured)$('myVideo').focus();
     $('mouseHint').textContent=captured?'Mouse captured · Esc to release':current.options.mouseLock?'Click game to capture mouse · Esc to release':'Mouse capture off';
   });
-  $('pauseGame').onclick=()=>{if(current?.running)emulator.pause(!current.paused);};
+  $('pauseGame').onclick=()=>{if(current?.running&&SAEState.ready)emulator.pause(!current.paused);};
   $('muteGame').onclick=()=>{if(current?.running){current.muted=!current.muted;emulator.mute(current.muted);$('muteGame').setAttribute('aria-pressed',String(current.muted));$('muteGame').setAttribute('aria-label',current.muted?'Unmute sound':'Mute sound');}};
   $('resetGame').onclick=()=>{if(current?.running)emulator.reset(false,false);};
   function setExpanded(expanded) {
@@ -262,7 +328,7 @@
     finally{select.disabled=false;}
   };
   // Keep launcher controls keyboard-accessible while SAE listens for game keys on document.
-  for(const type of ['keydown','keyup'])$('playerDialog').addEventListener(type,event=>{if(event.target.closest('button,select'))event.stopPropagation();});
+  for(const dialog of ['playerDialog','quitDialog','resumeDialog'])for(const type of ['keydown','keyup'])$(dialog).addEventListener(type,event=>{if(event.target.closest('button,select'))event.stopPropagation();});
   function saveStatus(active,state,detail) {
     if(current!==active)return;
     $('saveStatus').textContent=state==='restored'?'Saved disk restored':state==='saving'?'Saving…':state==='saved'?'Disk changes saved':state==='error'?'Save failed':'Saves stored in this browser';
@@ -273,10 +339,13 @@
   }
   async function updateSaveSummary(game) {
     $('saveSummary').textContent='Checking saves…';
-    $('deleteSaves').disabled=true;
-    try{const records=await (await saveStore()).list(game.id);if(settingsGame!==game)return;
+    $('deleteSaves').disabled=true;$('deleteState').disabled=true;
+    try{const checkpoint=await(await saveStore()).state(game.id);if(settingsGame!==game)return;
+      $('stateSummary').textContent=checkpoint?'Position saved '+new Date(checkpoint.updatedAt).toLocaleString():'No saved position.';
+      $('deleteState').disabled=!checkpoint;
+      const records=await (await saveStore()).list(game.id);if(settingsGame!==game)return;
       $('saveSummary').textContent=records.length?'Saved '+new Date(Math.max(...records.map(r=>r.updatedAt))).toLocaleString():'No saved disk changes yet.';
-      $('deleteSaves').disabled=!records.length;
+      $('deleteSaves').disabled=!records.length&&!checkpoint;
     }catch(error){if(settingsGame===game)$('saveSummary').textContent='Save storage unavailable: '+error.message;}
   }
   async function downloadSaves(records,title) {
@@ -285,9 +354,13 @@
   }
   $('exportSaves').onclick=async()=>{try{const game=settingsGame;await downloadSaves(await(await saveStore()).list(game.id),game.title);}catch(error){toast(error.message);}};
   $('importSaves').onclick=()=>$('saveInput').click();
+  $('deleteState').onclick=async()=>{
+    const game=settingsGame;if(!game||!confirm('Delete the saved position for '+game.title+'? Disk saves are kept.'))return;
+    let release;try{release=await SAESaves.lock(game.id);await(await saveStore()).deleteState(game.id);await updateSaveSummary(game);toast('Saved position deleted.');}catch(error){toast(error.message);}finally{release?.();}
+  };
   $('deleteSaves').onclick=async()=>{
     const game=settingsGame;if(!game)return;
-    if(!confirm('Delete stored data for '+game.title+'?\n\nThis removes all saved progress and crash dumps from this game’s browser-stored disks. Original game files and exported backups are kept.'))return;
+    if(!confirm('Delete stored data for '+game.title+'?\n\nThis removes the saved position, all saved progress and crash dumps from this game’s browser-stored disks. Original game files and exported backups are kept.'))return;
     let release;$('deleteSaves').disabled=true;
     try{
       if(current?.game.id===game.id)throw new Error('Close this game before deleting its stored data.');
@@ -306,7 +379,7 @@
   $('exportSession').onclick=async()=>{try{const active=current;if(active)await downloadSaves(await active.saves.records(),active.game.title);}catch(error){toast(error.message);}};
   document.addEventListener('visibilitychange',()=>{if(document.hidden)current?.saves?.flush().catch(()=>{});});
   window.addEventListener('pagehide',()=>{current?.saves?.flush().catch(()=>{});});
-  window.addEventListener('beforeunload',event=>{if(current?.saves?.dirty){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(current?.saves?.dirty||current?.savingState){event.preventDefault();event.returnValue='';}});
   function addSystemFiles() {importRole='bios/';$('fileInput').click();}
   $('addBios').onclick=()=>{$('settingsDialog').close();addSystemFiles();};
   $('noticeAction').onclick=()=>{if($('noticeAction').textContent==='Choose folder')addDialog();else addSystemFiles();};

@@ -176,4 +176,22 @@ function SAEO_Filesys() {
 		initialize_mountinfo();
 	}
 	this.prepare_reset = function() {} //filesys_prepare_reset()
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+
+		}; },
+		set: function(s) {
+
+		},
+		functions: function() { return {
+			allocuci,getunittype,ismainboardide,add_mainboard_unit_init,add_ide_unit,initialize_mountinfo,
+			free_mountinfo,
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

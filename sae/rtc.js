@@ -330,4 +330,25 @@ function SAEO_RTC() {
 		//SAEC_Memory_addrbank_flag_IO, S_READ, S_WRITE, null, 0x3f, 0xd80000
 		SAEC_Memory_addrbank_flag_IO, null, 0x3f, 0xd80000
 	);
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			clock_control_d,clock_control_e,clock_control_f,rtc_memory,rtc_alarm,
+		}; },
+		set: function(s) {
+			clock_control_d=s.clock_control_d;
+			clock_control_e=s.clock_control_e;
+			clock_control_f=s.clock_control_f;
+			rtc_memory=s.rtc_memory;
+			rtc_alarm=s.rtc_alarm;
+		},
+		functions: function() { return {
+			localtime,getct,getclockreg,read,get32,get16,get8,put32,put16,put8,
+		}; },
+		constants: function() { return {
+			RTC_DEBUG,RF5C01A_RAM_SIZE,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

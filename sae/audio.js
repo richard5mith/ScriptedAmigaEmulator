@@ -1704,4 +1704,67 @@ function SAEO_Audio() {
 		this.update();
 		audio_channel[nr].vol = v;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			scaled_sample_evtime_orig,used_freq,audio_channel,vi,audio_channel_mask,audio_channel_count,
+			audio_work_to_do,sample_handler,sample_prehandler,sample_evtime,scaled_sample_evtime,last_cycles,
+			next_sample_evtime,paula,datas,right_word_saved,left_word_saved,saved_ptr,mixed_on,
+			mixed_stereo_size,mixed_mul1,mixed_mul2,usehacks,led_filter_forced,sound_use_filter,
+			led_filter_on,sound_filter_state,a500e_filter1_a0,a500e_filter2_a0,filter_a0,prevcon,
+		}; },
+		set: function(s) {
+			scaled_sample_evtime_orig=s.scaled_sample_evtime_orig;
+			used_freq=s.used_freq;
+			audio_channel=s.audio_channel;
+			vi=s.vi;
+			audio_channel_mask=s.audio_channel_mask;
+			audio_channel_count=s.audio_channel_count;
+			audio_work_to_do=s.audio_work_to_do;
+			sample_handler=s.sample_handler;
+			sample_prehandler=s.sample_prehandler;
+			sample_evtime=s.sample_evtime;
+			scaled_sample_evtime=s.scaled_sample_evtime;
+			last_cycles=s.last_cycles;
+			next_sample_evtime=s.next_sample_evtime;
+			paula=s.paula;
+			datas=s.datas;
+			right_word_saved=s.right_word_saved;
+			left_word_saved=s.left_word_saved;
+			saved_ptr=s.saved_ptr;
+			mixed_on=s.mixed_on;
+			mixed_stereo_size=s.mixed_stereo_size;
+			mixed_mul1=s.mixed_mul1;
+			mixed_mul2=s.mixed_mul2;
+			usehacks=s.usehacks;
+			led_filter_forced=s.led_filter_forced;
+			sound_use_filter=s.sound_use_filter;
+			led_filter_on=s.led_filter_on;
+			sound_filter_state=s.sound_filter_state;
+			a500e_filter1_a0=s.a500e_filter1_a0;
+			a500e_filter2_a0=s.a500e_filter2_a0;
+			filter_a0=s.filter_a0;
+			prevcon=s.prevcon;
+		},
+		functions: function() { return {
+			cachediff,cachewrite,cacheread,scaleplay,process_sound_buffer_webaudio,
+			finish_sound_buffer_webaudio,pause_sound,resume_sound,connect_sound,disconnect_sound,open_sound,
+			close_sound,obtain_sound,setup_sound,cleanup_sound,reset_sound,mute_sound,audio_channel_data,
+			filter_state,filter,clear_sound_buffers,finish_sound_buffer,check_sound_buffers,
+			put_sound_word_right,put_sound_word_left,anti_prehandler,samplexx_anti_handler,
+			sample16_mono_handler,sample16i_anti_mono_handler,sample16i_rh_mono_handler,
+			sample16i_crux_mono_handler,sample16s_handler,sample16si_anti_handler,sample16si_rh_handler,
+			sample16si_crux_handler,zerostate,schedule_audio,audio_event_reset,audio_deactivate,
+			audio_activate,isirq,setirq,newsample,setdr,loaddat,loadper,audio_state_channel2,
+			audio_state_channel,rc_calculate_a0,
+		}; },
+		constants: function() { return {
+			PAULA_FREQ_PAL,PAULA_FREQ_NTSC,CACHE_FRAMES_MULT,SCALE_FRAMES_MULT,SOUND_SYNC_MULTIPLIER,
+			INV32768,MAX_EV,PERIOD_MIN,PERIOD_MIN_NONCE,PERIOD_MAX,AUDIO_CHANNELS_PAULA,AUDIO_CHANNELS_MAX,
+			SOUND_MAX_DELAY_BUFFER,MIXED_STEREO_MAX,MIXED_STEREO_SCALE,DENORMAL_OFFSET,FILTER_NONE,
+			FILTER_MODEL_A500,FILTER_MODEL_A1200,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

@@ -1701,4 +1701,102 @@ function SAEO_CIA() {
 		//SAEC_Memory_addrbank_flag_IO | SAEC_Memory_addrbank_flag_CIA, S_READ, S_WRITE, null, 0x3f01, 0xbfc000
 		SAEC_Memory_addrbank_flag_IO | SAEC_Memory_addrbank_flag_CIA, null, 0x3f01, 0xbfc000
 	);
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			ciaaicr,ciaaimask,ciabicr,ciabimask,ciaacra,ciaacrb,ciabcra,ciabcrb,ciaastarta,ciaastartb,
+			ciabstarta,ciabstartb,ciaata,ciaatb,ciabta,ciabtb,ciaata_passed,ciaatb_passed,ciabta_passed,
+			ciabtb_passed,ciaatod,ciabtod,ciaatol,ciabtol,ciaaalarm,ciabalarm,ciaatlatch,ciabtlatch,oldovl,
+			led,led_old_brightness,led_cycles_on,led_cycles_off,led_cycle,ciabpra,ciaala,ciaalb,ciabla,
+			ciablb,ciaatodon,ciabtodon,ciaapra,ciaaprb,ciaadra,ciaadrb,ciaasdr,ciaasdr_cnt,ciabprb,ciabdra,
+			ciabdrb,ciabsdr,ciabsdr_cnt,div10,kbstate,kblostsynccnt,kbcode,serbits,warned,tod_hack_tv,
+			tod_hack_tod,tod_hack_tod_last,tod_hack_enabled,tod_hack_delay,tod_diff_cnt,heartbeat_cnt,
+			oldrate,ciab_tod_hoffset,ciab_tod_event_state,
+		}; },
+		set: function(s) {
+			ciaaicr=s.ciaaicr;
+			ciaaimask=s.ciaaimask;
+			ciabicr=s.ciabicr;
+			ciabimask=s.ciabimask;
+			ciaacra=s.ciaacra;
+			ciaacrb=s.ciaacrb;
+			ciabcra=s.ciabcra;
+			ciabcrb=s.ciabcrb;
+			ciaastarta=s.ciaastarta;
+			ciaastartb=s.ciaastartb;
+			ciabstarta=s.ciabstarta;
+			ciabstartb=s.ciabstartb;
+			ciaata=s.ciaata;
+			ciaatb=s.ciaatb;
+			ciabta=s.ciabta;
+			ciabtb=s.ciabtb;
+			ciaata_passed=s.ciaata_passed;
+			ciaatb_passed=s.ciaatb_passed;
+			ciabta_passed=s.ciabta_passed;
+			ciabtb_passed=s.ciabtb_passed;
+			ciaatod=s.ciaatod;
+			ciabtod=s.ciabtod;
+			ciaatol=s.ciaatol;
+			ciabtol=s.ciabtol;
+			ciaaalarm=s.ciaaalarm;
+			ciabalarm=s.ciabalarm;
+			ciaatlatch=s.ciaatlatch;
+			ciabtlatch=s.ciabtlatch;
+			oldovl=s.oldovl;
+			led=s.led;
+			led_old_brightness=s.led_old_brightness;
+			led_cycles_on=s.led_cycles_on;
+			led_cycles_off=s.led_cycles_off;
+			led_cycle=s.led_cycle;
+			ciabpra=s.ciabpra;
+			ciaala=s.ciaala;
+			ciaalb=s.ciaalb;
+			ciabla=s.ciabla;
+			ciablb=s.ciablb;
+			ciaatodon=s.ciaatodon;
+			ciabtodon=s.ciabtodon;
+			ciaapra=s.ciaapra;
+			ciaaprb=s.ciaaprb;
+			ciaadra=s.ciaadra;
+			ciaadrb=s.ciaadrb;
+			ciaasdr=s.ciaasdr;
+			ciaasdr_cnt=s.ciaasdr_cnt;
+			ciabprb=s.ciabprb;
+			ciabdra=s.ciabdra;
+			ciabdrb=s.ciabdrb;
+			ciabsdr=s.ciabsdr;
+			ciabsdr_cnt=s.ciabsdr_cnt;
+			div10=s.div10;
+			kbstate=s.kbstate;
+			kblostsynccnt=s.kblostsynccnt;
+			kbcode=s.kbcode;
+			serbits=s.serbits;
+			warned=s.warned;
+			tod_hack_tv=s.tod_hack_tv;
+			tod_hack_tod=s.tod_hack_tod;
+			tod_hack_tod_last=s.tod_hack_tod_last;
+			tod_hack_enabled=s.tod_hack_enabled;
+			tod_hack_delay=s.tod_hack_delay;
+			tod_diff_cnt=s.tod_diff_cnt;
+			heartbeat_cnt=s.heartbeat_cnt;
+			oldrate=s.oldrate;
+			ciab_tod_hoffset=s.ciab_tod_hoffset;
+			ciab_tod_event_state=s.ciab_tod_event_state;
+		},
+		functions: function() { return {
+			ICR,ICRA,ICRB,RethinkICRA,RethinkICRB,compute_passed_time,CIA_update_check,CIA_update,
+			CIA_calctimers,checkalarm,ciab_checkalarm,ciaa_checkalarm,tod_hack_reset,do_tod_hack,setcode,
+			keyreq,CIAB_tod_inc,CIAB_tod_inc_event,CIAB_tod_check,check_keyboard,calc_led,led_vsync,
+			CIAA_tod_handler,check_led,bfe001_change,getciatod,calc_bintod,setciatod_ciaatod,
+			setciatod_ciaaalarm,setciatod_ciabtod,setciatod_ciabalarm,ReadCIAA,ReadCIAB,WriteCIAA,WriteCIAB,
+			issinglecia,isgayle,iscia,isgaylenocia,isgarynocia,cia_wait_pre,cia_wait_post,get8,get16,get32,
+			put8,put16,put32,getInst32,getInst16,
+		}; },
+		constants: function() { return {
+			TOD_HACK,ECLOCK_DATA_CYCLE,ECLOCK_WAIT_CYCLE,DIV10,CIASTARTCYCLESHI,CIASTARTCYCLESCRA,
+			TOD_HACK_DELAY,TOD_HACK_TIME,TOD_INC_DELAY,RAWKEY_INIT_POWER_UP,RAWKEY_TERM_POWER_UP,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

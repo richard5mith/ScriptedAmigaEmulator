@@ -247,6 +247,11 @@ function SAEO_M68K() {
 				SAER.playfield.custom_prepare();
 				//protect_roms(true);
 				startup = 0;
+				if (typeof SAEState !== "undefined" && !SAEState.boot()) {
+					SAEV_command = SAEC_command_Quit;
+					setTimeout(function() { SAER.m68k.m68k_cycle(0, 0); }, 0);
+					return;
+				}
 			}
 			SAEF_clrSpcFlags(SAEC_spcflag_MODE_CHANGE);
 
@@ -520,4 +525,24 @@ function SAEO_M68K() {
 
 		return false;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			reset_delay,haltloop_prevvpos,cpu_keyboardreset,cpu_hardreset,
+		}; },
+		set: function(s) {
+			reset_delay=s.reset_delay;
+			haltloop_prevvpos=s.haltloop_prevvpos;
+			cpu_keyboardreset=s.cpu_keyboardreset;
+			cpu_hardreset=s.cpu_hardreset;
+		},
+		functions: function() { return {
+			m68k_reset,haltloop,do_interrupt,do_trace,
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

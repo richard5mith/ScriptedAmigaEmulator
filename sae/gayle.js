@@ -1583,4 +1583,77 @@ function SAEO_Gayle() {
 		SAEV_Gayle_bank.name = bankname;
 		this.gayle_dataflyer_enable(false);
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			idedrive,vi,pcmcia_sram,pcmcia_card,pcmcia_readonly,pcmcia_type,pcmcia_configuration,
+			pcmcia_configured,gayle_id_cnt,gayle_irq,gayle_int,gayle_cs,gayle_cs_mask,gayle_cfg,ide_splitter,
+			gayle_its,dataflyer_state,dataflyer_disable_irq,dataflyer_byte,ramsey_config,garyidoffset,
+			gary_coldboot,mbres_sub_bank,pcmcia_common_size,pcmcia_attrs_size,pcmcia_common,pcmcia_attrs,
+			pcmcia_write_min,pcmcia_write_max,pcmcia_idedata,gayle_common_bank,gayle_attr_bank,
+		}; },
+		set: function(s) {
+			idedrive=s.idedrive;
+			vi=s.vi;
+			pcmcia_sram=s.pcmcia_sram;
+			pcmcia_card=s.pcmcia_card;
+			pcmcia_readonly=s.pcmcia_readonly;
+			pcmcia_type=s.pcmcia_type;
+			pcmcia_configuration=s.pcmcia_configuration;
+			pcmcia_configured=s.pcmcia_configured;
+			gayle_id_cnt=s.gayle_id_cnt;
+			gayle_irq=s.gayle_irq;
+			gayle_int=s.gayle_int;
+			gayle_cs=s.gayle_cs;
+			gayle_cs_mask=s.gayle_cs_mask;
+			gayle_cfg=s.gayle_cfg;
+			ide_splitter=s.ide_splitter;
+			gayle_its=s.gayle_its;
+			dataflyer_state=s.dataflyer_state;
+			dataflyer_disable_irq=s.dataflyer_disable_irq;
+			dataflyer_byte=s.dataflyer_byte;
+			ramsey_config=s.ramsey_config;
+			garyidoffset=s.garyidoffset;
+			gary_coldboot=s.gary_coldboot;
+			mbres_sub_bank=s.mbres_sub_bank;
+			pcmcia_common_size=s.pcmcia_common_size;
+			pcmcia_attrs_size=s.pcmcia_attrs_size;
+			pcmcia_common=s.pcmcia_common;
+			pcmcia_attrs=s.pcmcia_attrs;
+			pcmcia_write_min=s.pcmcia_write_min;
+			pcmcia_write_max=s.pcmcia_write_max;
+			pcmcia_idedata=s.pcmcia_idedata;
+			gayle_common_bank=s.gayle_common_bank;
+			gayle_attr_bank=s.gayle_attr_bank;
+		},
+		functions: function() { return {
+			pcmcia_reset,checkpcmciaideirq,checkgayleideirq,gayle_cs_change,card_trigger,write_gayle_cfg,
+			read_gayle_cfg,write_gayle_irq,read_gayle_irq,write_gayle_int,read_gayle_int,write_gayle_cs,
+			read_gayle_cs,get_gayle_ide_reg,gayle_read2,gayle_write2,gayle_read,gayle_write,
+			isdataflyerscsiplus,gayle_get32,gayle_get16,gayle_get8,gayle_put32,gayle_put16,gayle_put8,
+			gayle2_read,gayle2_write,gayle2_get32,gayle2_get16,gayle2_get8,gayle2_put32,gayle2_put16,
+			gayle2_put8,mbres_read,mbres_write,mbres_get32,mbres_get16,mbres_get8,mbres_put32,mbres_put16,
+			mbres_put8,get_pcmcmia_ide_reg,checkflush,gayle_common_read,gayle_common_write,
+			gayle_common_get32,gayle_common_get16,gayle_common_get8,gayle_common_put32,gayle_common_put16,
+			gayle_common_put8,gayle_common_check,gayle_common_xlate,gayle_attr_read,gayle_attr_write,
+			gayle_attr_get32,gayle_attr_get16,gayle_attr_get8,gayle_attr_put32,gayle_attr_put16,
+			gayle_attr_put8,setCSTR,initscideattr,initsramattr,initpcmcia,freepcmcia,initide,
+		}; },
+		constants: function() { return {
+			PCMCIA_COMMON_START,PCMCIA_COMMON_SIZE,GAYLE_LOG,MBRES_LOG,PCMCIA_LOG,PCMCIA_SRAM,PCMCIA_IDE,
+			NCR_OFFSET,NCR_ALT_OFFSET,NCR_MASK,GAYLE_RAM,GAYLE_RAMSIZE,GAYLE_ATTRIBUTE,GAYLE_ATTRIBUTESIZE,
+			GAYLE_IO,GAYLE_IOSIZE,GAYLE_IO_8BITODD,GAYLE_ADDRESS,GAYLE_RESET,GAYLE_BASE_4000,GAYLE_BASE_1200,
+			GAYLE_IRQ_4000,GAYLE_CS_1200,GAYLE_IRQ_1200,GAYLE_INT_1200,GAYLE_CFG_1200,GAYLE_CS_IDE,
+			GAYLE_CS_CCDET,GAYLE_CS_BVD1,GAYLE_CS_SC,GAYLE_CS_BVD2,GAYLE_CS_DA,GAYLE_CS_WR,GAYLE_CS_BSY,
+			GAYLE_CS_IRQ,GAYLE_CS_DAEN,GAYLE_CS_DIS,GAYLE_IRQ_IDE,GAYLE_IRQ_CCDET,GAYLE_IRQ_BVD1,
+			GAYLE_IRQ_SC,GAYLE_IRQ_BVD2,GAYLE_IRQ_DA,GAYLE_IRQ_WR,GAYLE_IRQ_BSY,GAYLE_IRQ_IRQ,
+			GAYLE_IRQ_RESET,GAYLE_IRQ_BERR,GAYLE_INT_IDE,GAYLE_INT_CCDET,GAYLE_INT_BVD1,GAYLE_INT_SC,
+			GAYLE_INT_BVD2,GAYLE_INT_DA,GAYLE_INT_WR,GAYLE_INT_BSY,GAYLE_INT_IRQ,GAYLE_INT_BVD_LEV,
+			GAYLE_INT_BSY_LEV,GAYLE_CFG_0V,GAYLE_CFG_5V,GAYLE_CFG_12V,GAYLE_CFG_100NS,GAYLE_CFG_150NS,
+			GAYLE_CFG_250NS,GAYLE_CFG_720NS,TOTAL_IDE,GAYLE_IDE_ID,PCMCIA_IDE_ID,IDE_DATA,IDE_ERROR,
+			IDE_STATUS,IDE_SECONDARY,IDE_DEVCON,IDE_DRVADDR,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

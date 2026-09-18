@@ -13,6 +13,15 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
   async function library(){await page.goto(url);await page.getByRole('button',{name:'Play Qwak',exact:true}).waitFor();await page.waitForFunction(()=>!document.querySelector('.play-button').disabled);}
   async function play(){await page.getByRole('button',{name:'Play Qwak',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#bootMessage').hidden);}
   await library();
+  // Existing version-one disk saves survive the checkpoint-store upgrade.
+  await page.evaluate(async()=>{
+    await new Promise((resolve,reject)=>{
+      const request=indexedDB.open('sae-game-saves',1);
+      request.onupgradeneeded=()=>{const store=request.result.createObjectStore('media',{keyPath:'key'});store.createIndex('gameId','gameId');store.put({key:'upgrade-marker',gameId:'upgrade-test',data:new Uint8Array([42])});};
+      request.onerror=()=>reject(request.error);request.onsuccess=()=>{request.result.close();resolve();};
+    });
+    const store=await SAESaves.open();if((await store.read('upgrade-marker')).data[0]!==42||!store.db.objectStoreNames.contains('states'))throw Error('Disk-save upgrade lost data');
+  });
   await page.evaluate(()=>{
     const open=SAEF_ZFile_fopen_file;
     SAEF_ZFile_fopen_file=function(file){const result=open(file);if(file.name==='Qwak.hdf')window.testMedia=result;return result;};
@@ -26,11 +35,11 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
     SAEF_ZFile_fwrite(new Uint8Array(marker),0,1,marker.length,testMedia);
   },marker);
   await page.waitForFunction(()=>document.querySelector('#saveStatus').textContent==='Disk changes saved');
-  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.getByRole('button',{name:"Yes and don't save state",exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
   await library();await play();
   assert.deepEqual(await page.evaluate(()=>Array.from(SAEV_config.mount.config[0].ci.file.data.slice(-8))),marker);
   assert.equal(await page.locator('#saveStatus').textContent(),'Saved disk restored');
-  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.getByRole('button',{name:"Yes and don't save state",exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
   await page.getByRole('button',{name:'Settings for Qwak',exact:true}).click();
   await page.locator('#gameSaves summary').click();
   await page.waitForFunction(()=>document.querySelector('#saveSummary').textContent.startsWith('Saved '));
@@ -58,7 +67,7 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
   await library();await play();
   assert.notDeepEqual(await page.evaluate(()=>Array.from(SAEV_config.mount.config[0].ci.file.data.slice(-8))),marker);
   assert.notEqual(await page.locator('#saveStatus').textContent(),'Saved disk restored');
-  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.getByRole('button',{name:"Yes and don't save state",exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
   // The real IndexedDB backend rejects stale writers and preserves the winner.
   await page.evaluate(async()=>{
     const store=await SAESaves.open(),a=new SAESaves.Session(store,'conflict-test'),b=new SAESaves.Session(store,'conflict-test');

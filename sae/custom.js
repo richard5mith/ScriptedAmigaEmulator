@@ -768,6 +768,27 @@ function SAEO_Custom() {
 
 		writeMap[0x1FE >> 1] = function(value, hpos) { SAER.playfield.FNULL(value); };
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			readMap,writeMap,intreq_internal,intena_internal,
+		}; },
+		set: function(s) {
+			readMap=s.readMap;
+			writeMap=s.writeMap;
+			intreq_internal=s.intreq_internal;
+			intena_internal=s.intena_internal;
+		},
+		functions: function() { return {
+			DMACONR,DMACON,INTREQR,INTENAR,INTENA,ADKCONR,ADKCON,get16_real,get16_2,get8,get16,getInst16,
+			get32,getInst32,put16_real,put16,put8,put32,createReadMap,createWriteMap,
+		}; },
+		constants: function() { return {
+			INT_PROCESSING_DELAY,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 /*-----------------------------------------------------------------------*/
@@ -889,4 +910,21 @@ function SAEO_Devices() {
 	/*this.update_sync = function(svpos, syncadjust) {
 		cd32_fmv_set_sync(svpos, syncadjust);
 	}*/
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+
+		}; },
+		set: function(s) {
+
+		},
+		functions: function() { return {
+
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

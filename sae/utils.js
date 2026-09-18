@@ -92,6 +92,27 @@ function SAEO_MAvg(size) {
 		}
 		return average / usage; /* return as float */
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			values,size,usage,offset,average,
+		}; },
+		set: function(s) {
+			values=s.values;
+			size=s.size;
+			usage=s.usage;
+			offset=s.offset;
+			average=s.average;
+		},
+		functions: function() { return {
+
+		}; },
+		constants: function() { return {
+
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 /*-----------------------------------------------------------------------*/

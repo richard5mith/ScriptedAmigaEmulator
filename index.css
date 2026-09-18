@@ -19,3 +19,5 @@ dialog{color:var(--ink);border:1px solid #3d444e;border-radius:10px;box-shadow:0
 .player-dialog.expanded #fullscreenGame{width:40px;height:40px;margin:0;background:#17191cbf;color:#d3dbe4;border:1px solid #ffffff20}
 .player-dialog.expanded #fullscreenGame:hover{background:#303741}
 #saveRecovery{padding:0 22px 18px}.player-dialog.expanded #saveRecovery{display:none}#saveStatus{color:#a6b8a9}
+
+.choice-dialog{width:min(420px,calc(100vw - 32px));padding:28px}.choice-dialog h2{font-size:20px;margin:0 0 20px}.choice-actions{display:grid;gap:10px}.choice-actions .button{justify-content:center}.choice-dialog [role="alert"]{color:var(--ink);font-size:14px;margin:0 0 16px}

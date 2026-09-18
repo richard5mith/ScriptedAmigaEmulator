@@ -2825,4 +2825,78 @@ function SAEO_Memory() {
 	if (SAEV_config.debug.level == SAEC_Config_Debug_Level_Log)
 		memory_map_dump_2(1);
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			kickstart_version,rom_write_enabled,mem_hardreset,bogomem_aliasing,bogomem_aliasing_offset,
+			mem_banks,vi,ce_banktype,ce_cachable,aros,dummylog_cnt,gary_wait_cnt,chipmem_dummy_bank,
+			chipmem_full_mask,chipmem_full_size,chipmem_bank,bogomem_bank,a3000lmem_bank,a3000hmem_bank,
+			a1000_kickstart_mode,a1000_bootrom,kickmem_bank,extendedkickmem_type,extendedkickmem_bank,
+			extendedkickmem2_bank,custmem1_bank,custmem2_bank,kickstore,a3000_f0,
+		}; },
+		set: function(s) {
+			kickstart_version=s.kickstart_version;
+			rom_write_enabled=s.rom_write_enabled;
+			mem_hardreset=s.mem_hardreset;
+			bogomem_aliasing=s.bogomem_aliasing;
+			bogomem_aliasing_offset=s.bogomem_aliasing_offset;
+			mem_banks=s.mem_banks;
+			vi=s.vi;
+			ce_banktype=s.ce_banktype;
+			ce_cachable=s.ce_cachable;
+			aros=s.aros;
+			dummylog_cnt=s.dummylog_cnt;
+			gary_wait_cnt=s.gary_wait_cnt;
+			chipmem_dummy_bank=s.chipmem_dummy_bank;
+			chipmem_full_mask=s.chipmem_full_mask;
+			chipmem_full_size=s.chipmem_full_size;
+			chipmem_bank=s.chipmem_bank;
+			bogomem_bank=s.bogomem_bank;
+			a3000lmem_bank=s.a3000lmem_bank;
+			a3000hmem_bank=s.a3000hmem_bank;
+			a1000_kickstart_mode=s.a1000_kickstart_mode;
+			a1000_bootrom=s.a1000_bootrom;
+			kickmem_bank=s.kickmem_bank;
+			extendedkickmem_type=s.extendedkickmem_type;
+			extendedkickmem_bank=s.extendedkickmem_bank;
+			extendedkickmem2_bank=s.extendedkickmem2_bank;
+			custmem1_bank=s.custmem1_bank;
+			custmem2_bank=s.custmem2_bank;
+			kickstore=s.kickstore;
+			a3000_f0=s.a3000_f0;
+		},
+		functions: function() { return {
+			get_mem_bank,get32,getInst32,get16,getInst16,get8,put32,put16,put8,xlate_address,check_address,
+			gary_wait,gary_nonrange,dummy_get_safe,chipmem_dummy,chipmem_dummy_put8,chipmem_dummy_put16,
+			chipmem_dummy_put32,chipmem_dummy_get8,chipmem_dummy_get16,chipmem_dummy_get32,chipmem_get32,
+			chipmem_get16,chipmem_get8,chipmem_put32,chipmem_put16,chipmem_put8,chipmem_check,chipmem_xlate,
+			chipmem_agnus_get16,chipmem_agnus_get8,chipmem_agnus_put16,chipmem_agnus_put8,
+			chipmem_setindirect,bogomem_get32,bogomem_get16,bogomem_get8,bogomem_put32,bogomem_put16,
+			bogomem_put8,bogomem_check,bogomem_xlate,a3000lmem_get32,a3000lmem_get16,a3000lmem_get8,
+			a3000lmem_put32,a3000lmem_put16,a3000lmem_put8,a3000lmem_check,a3000lmem_xlate,a3000hmem_get32,
+			a3000hmem_get16,a3000hmem_get8,a3000hmem_put32,a3000hmem_put16,a3000hmem_put8,a3000hmem_check,
+			a3000hmem_xlate,a1000_handle_kickstart,kickmem_get32,kickmem_get16,kickmem_get8,kickmem_put32,
+			kickmem_put16,kickmem_put8,kickmem_check,kickmem_xlate,extendedkickmem_get32,
+			extendedkickmem_get16,extendedkickmem_get8,extendedkickmem_put32,extendedkickmem_put16,
+			extendedkickmem_put8,extendedkickmem_check,extendedkickmem_xlate,extendedkickmem2_get32,
+			extendedkickmem2_get16,extendedkickmem2_get8,extendedkickmem2_put32,extendedkickmem2_put16,
+			extendedkickmem2_put8,extendedkickmem2_check,extendedkickmem2_xlate,custmem1_get32,
+			custmem1_get16,custmem1_get8,custmem1_put32,custmem1_put16,custmem1_put8,custmem1_check,
+			custmem1_xlate,custmem2_get32,custmem2_get16,custmem2_get8,custmem2_put32,custmem2_put16,
+			custmem2_put8,custmem2_check,custmem2_xlate,read_kickstart,load_extendedkickstart,
+			patch_shapeshifter,patch_residents,patch_kick,load_kickstart_replacement,load_kickstart,
+			mapped_malloc,mapped_free,init_mem_banks,singlebit,allocate,fill_ce_banks,restore_roms,setup,
+			map_banks_set,map_banks2,map_banks,validate_banks_z2,validate_banks_z3,dump_xlate,
+			UaeMemoryRegion,UaeMemoryMap,memory_map_dump_3,memory_map_dump_2,
+		}; },
+		constants: function() { return {
+			ADDRESS_SPACE_24BIT,MEMORY_BANKS,MEMORY_RANGE_MASK,ROM_SIZE_512,ROM_SIZE_256,ROM_SIZE_128,
+			chipmem_start_addr,bogomem_start_addr,cardmem_start_addr,kickmem_start_addr,MAX_ILG,
+			NONEXISTINGDATA,EXTENDED_ROM_CD32,EXTENDED_ROM_CDTV,EXTENDED_ROM_KS,EXTENDED_ROM_ARCADIA,
+			fkickmem_size,fkickmem_halfsize,UAE_MEMORY_REGIONS_MAX,UAE_MEMORY_REGION_RAM,
+			UAE_MEMORY_REGION_ALIAS,UAE_MEMORY_REGION_MIRROR,MEMORY_MIN_SUBBANK,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

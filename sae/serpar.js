@@ -242,6 +242,34 @@ function SAEO_Serial() {
 		dtr = false;
 		oldserbits = 0;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			data_in_serdat,data_in_serdatr,data_in_sershift,serdatshift,serdatshift_masked,ovrun,dtr,
+			oldserbits,serper,serdat,serdatr,
+		}; },
+		set: function(s) {
+			data_in_serdat=s.data_in_serdat;
+			data_in_serdatr=s.data_in_serdatr;
+			data_in_sershift=s.data_in_sershift;
+			serdatshift=s.serdatshift;
+			serdatshift_masked=s.serdatshift_masked;
+			ovrun=s.ovrun;
+			dtr=s.dtr;
+			oldserbits=s.oldserbits;
+			serper=s.serper;
+			serdat=s.serdat;
+			serdatr=s.serdatr;
+		},
+		functions: function() { return {
+			dochar,serdatcopy,status_debug,
+		}; },
+		constants: function() { return {
+			DEBUGIO,DEBUGHS,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }
 
 function SAEO_Parallel() {
@@ -299,4 +327,21 @@ function SAEO_Parallel() {
 
 	/*this.reset = function() { //initparallel()
 	}*/
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			status,
+		}; },
+		set: function(s) {
+			status=s.status;
+		},
+		functions: function() { return {
+
+		}; },
+		constants: function() { return {
+			DEBUGIO,DEBUGHS,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

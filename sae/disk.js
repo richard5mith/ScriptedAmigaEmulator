@@ -1539,6 +1539,8 @@ function SAEO_Disk() {
 	/*function motordelay_func(v) {
 		floppy[v].motordelay = 0;
 	}*/
+	function motordelay_handler(v) { floppy[v].motordelay = 0; }
+
 	function drive_motor(drv, off) {
 		if (drv.motoroff && !off) {
 			drv.dskready_up_time = DSKREADY_UP_TIME * 312 + (Math.decimalRandom() & 511);
@@ -1554,9 +1556,7 @@ function SAEO_Disk() {
 			if (SAEV_config.cpu.model <= SAEC_Config_CPU_Model_68010 && SAEV_config.cpu.speed == SAEC_Config_CPU_Speed_Original) {
 				drv.motordelay = 1;
 				//SAER.events.event2_newevent2(30, drv.num, motordelay_func);
-				SAER.events.event2_newevent_xx(-1, 30 * SAEC_Events_CYCLE_UNIT, drv.num, function(v) {
-					floppy[v].motordelay = 0;
-				});
+				SAER.events.event2_newevent_xx(-1, 30 * SAEC_Events_CYCLE_UNIT, drv.num, motordelay_handler);
 			}
 		}
 		drv.motoroff = off;
@@ -4507,4 +4507,101 @@ function SAEO_Disk() {
 			drv->dskchange = false;
 		}
 	}*/
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			side,direction,reserved_side,selected,disabled,reserved,writebuffer,longwritemode,dskdmaen,
+			dsklength,dsklength2,dsklen,dskbytr_val,dskpt,fifo_filled,fifo,fifo_inuse,dma_enable,bitoffset,
+			syncoffset,word,dsksync,dsksync_cycles,disk_hpos,disk_jitter,indexdecay,prev_data,prev_step,
+			initial_disk_statusline,amax_enabled,linecounter,prev_days,prev_mins,prev_ticks,warned_ext2,
+			warned_trackspeed,driveNames,floppy,vi,bigmfmbufw,amax_rom_ptr,amax_rom,amax_rom_size,
+			amax_rom_oddeven,amax_data,amax_bfd100,amax_bfe001_ov,amax_select,amax_lastbit,amax_is_active,
+			scpdrive,
+		}; },
+		set: function(s) {
+			side=s.side;
+			direction=s.direction;
+			reserved_side=s.reserved_side;
+			selected=s.selected;
+			disabled=s.disabled;
+			reserved=s.reserved;
+			writebuffer=s.writebuffer;
+			longwritemode=s.longwritemode;
+			dskdmaen=s.dskdmaen;
+			dsklength=s.dsklength;
+			dsklength2=s.dsklength2;
+			dsklen=s.dsklen;
+			dskbytr_val=s.dskbytr_val;
+			dskpt=s.dskpt;
+			fifo_filled=s.fifo_filled;
+			fifo=s.fifo;
+			fifo_inuse=s.fifo_inuse;
+			dma_enable=s.dma_enable;
+			bitoffset=s.bitoffset;
+			syncoffset=s.syncoffset;
+			word=s.word;
+			dsksync=s.dsksync;
+			dsksync_cycles=s.dsksync_cycles;
+			disk_hpos=s.disk_hpos;
+			disk_jitter=s.disk_jitter;
+			indexdecay=s.indexdecay;
+			prev_data=s.prev_data;
+			prev_step=s.prev_step;
+			initial_disk_statusline=s.initial_disk_statusline;
+			amax_enabled=s.amax_enabled;
+			linecounter=s.linecounter;
+			prev_days=s.prev_days;
+			prev_mins=s.prev_mins;
+			prev_ticks=s.prev_ticks;
+			warned_ext2=s.warned_ext2;
+			warned_trackspeed=s.warned_trackspeed;
+			driveNames=s.driveNames;
+			floppy=s.floppy;
+			vi=s.vi;
+			bigmfmbufw=s.bigmfmbufw;
+			amax_rom_ptr=s.amax_rom_ptr;
+			amax_rom=s.amax_rom;
+			amax_rom_size=s.amax_rom_size;
+			amax_rom_oddeven=s.amax_rom_oddeven;
+			amax_data=s.amax_data;
+			amax_bfd100=s.amax_bfd100;
+			amax_bfe001_ov=s.amax_bfe001_ov;
+			amax_select=s.amax_select;
+			amax_lastbit=s.amax_lastbit;
+			amax_is_active=s.amax_is_active;
+			scpdrive=s.scpdrive;
+		},
+		functions: function() { return {
+			FLOPPY_WRITE_LEN,FLOPPY_GAP_LEN,NORMAL_FLOPPY_SPEED,trackid,drive,amax_load_byte,amax_check,
+			amax_diskwrite,amax_disk_select,amax_disk_status,amax_active,amax_reset,amax_init,scpDrive_def,
+			CLOCK_MIN,CLOCK_MAX,scp_open,scp_close,scp_loadtrack,next_flux,flux_next_bit,scp_loadrevolution,
+			get_floppy_speed,get_floppy_speed2,drive_id_name,drive_settype_id,drive_image_free,
+			reset_drive_gui,update_drive_gui,reset_drive,setamax,DISK_validate_filename,updatemfmpos,
+			track_reset,read_header_ext2,isrecognizedext,update_disk_statusline,drive_insert,drive_eject,
+			drive_writeprotected,rand_shifter,drive_empty,set_steplimit,drive_step,drive_track0,
+			drive_running,motordelay_handler,drive_motor,read_floppy_data,mfmcode,decode_amigados,
+			dos_encode_byte,mfmcoder,decode_pcdos,decode_diskspare,drive_fill_bigbuf,getmfmword,getmfmlong,
+			check_valid_mfm,decode_buffer,diskfile_update,drive_write_adf_amigados,drive_write_ext2,
+			mfmdecode,drive_write_pcdos,drive_write_data,setdskchangetime,disk_insert_2,disk_check_change,
+			fetch_DISK_select,unformatted,getonebit,dumpdisk,disk_dmafinished,fetchnextrevolution,
+			do_disk_index,disk_doupdate_write,update_jitter,updatetrackspeed,disk_doupdate_predict,doreaddma,
+			disk_doupdate_read_nothing,wordsync_detected,disk_doupdate_read,DISK_start,disk_checksum,
+			disk_date,load_track,examine_image,writeimageblock,dirhash,createbootblock,createrootblock,
+			getblock,pl,createdirheaderblock,createfileheaderblock,createbitmapblock,createimagefromexe,
+			floppy_get_bootblock,floppy_get_rootblock,creatediskfile,convert_adf_to_ext2,
+		}; },
+		constants: function() { return {
+			disk_debug_logging,DEBUG_DRIVE_ID,REVOLUTION_DEBUG,FLOPPY_WRITE_MAXLEN,DDHDMULT,MAX_SECTORS,
+			MAX_FLOPPY_DRIVES,MIN_STEPLIMIT_CYCLE,exeheader,DISK_INDEXSYNC,DISK_WORDSYNC,DISK_REVOLUTION,
+			DSKREADY_UP_TIME,DSKREADY_DOWN_TIME,WORDSYNC_TIME,DSKDMA_OFF,DSKDMA_INIT,DSKDMA_READ,
+			DSKDMA_WRITE,MAX_TRACKS,TRACK_AMIGADOS,TRACK_RAW,TRACK_RAW1,TRACK_PCDOS,TRACK_DISKSPARE,
+			TRACK_NONE,DRIVE_ID_NONE,DRIVE_ID_35DD,DRIVE_ID_35HD,DRIVE_ID_525SD,ADF_NONE,ADF_NORMAL,ADF_EXT1,
+			ADF_EXT2,ADF_SCP,ADF_PCDOS,ADF_KICK,ADF_SKICK,data_scramble,addr_scramble,AMAX_LOG,MAX_REVS,
+			PLL_fixed_clock,PLL_variable_clock,PLL_authentic,CLOCK_CENTRE,CLOCK_MAX_ADJ,SCK_NS_PER_TICK,
+			mfmencodetable,MFMMASK,FS_FLOPPY_BLOCKSIZE,FS_OFS_DATABLOCKSIZE,FS_EXTENSION_BLOCKS,
+			FS_FLOPPY_TOTALBLOCKS,bootblock_ofs,bootblock_ffs,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

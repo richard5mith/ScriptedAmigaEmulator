@@ -57,3 +57,24 @@ test('SAE file writes notify persistence with final bytes, including buffer grow
  assert.equal(observed.size,10);assert.equal(observed.name,'disk.adf');assert.deepEqual([...observed.data.slice(-3)],[7,8,9]);
  assert.equal(source[7],0);c.SAEF_ZFile_fclose(disk);assert.equal(observed.data[9],9);
 });
+test('checkpoint disks stage without writes and restore their own revisions only after adoption',async()=>{
+ const store=new Store(),s=new api.Session(store,'game');let m=await s.mount(image(),'disk');
+ m.onWrite(new Uint8Array([1,1,1,1]),4,m.name);await s.flush();const checkpoint=await s.checkpointMedia();
+ m.onWrite(new Uint8Array([2,2,2,2]),4,m.name);await s.flush();s.close();
+ const next=new api.Session(store,'game');m=await next.mount(image(),'disk',false,checkpoint);
+ assert.deepEqual([...m.data],[1,1,1,1]);assert.equal(next.dirty,false);assert.equal((await store.list('game'))[0].data[0],2);
+ next.adoptCheckpoint();await next.flush();assert.equal((await store.list('game'))[0].data[0],1);
+ m.onWrite(new Uint8Array([3,3,3,3]),4,m.name);await next.flush();assert.equal((await store.list('game'))[0].data[0],3);next.close();
+});
+test('checkpoint includes untouched mounted disks and rejects changed source media',async()=>{
+ const store=new Store(),s=new api.Session(store,'game');await s.mount(image(),'disk');const checkpoint=await s.checkpointMedia();s.close();
+ assert.equal(checkpoint.length,1);const next=new api.Session(store,'game');
+ await assert.rejects(next.mount({name:'changed',data:new Uint8Array([9,9,9])},'disk',false,checkpoint),/different game files/);next.close();
+});
+test('checkpoint adoption also restores disks ejected before capture',async()=>{
+ const store=new Store(),s=new api.Session(store,'game'),a=await s.mount(image(),'disk1'),b=await s.mount(image(),'disk2');
+ a.onWrite(new Uint8Array([1,1,1,1]),4,a.name);b.onWrite(new Uint8Array([2,2,2,2]),4,b.name);await s.flush();const checkpoint=await s.checkpointMedia();
+ a.onWrite(new Uint8Array([3,3,3,3]),4,a.name);await s.flush();s.close();
+ const next=new api.Session(store,'game');await next.stageCheckpoint(checkpoint);await next.mount(image(),'disk2',false,checkpoint);next.adoptCheckpoint();await next.flush();
+ assert.equal((await next.mount(image(),'disk1')).data[0],1);next.close();
+});

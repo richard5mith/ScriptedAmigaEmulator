@@ -643,4 +643,26 @@ function SAEO_Copper() {
 	this.COPCON = function(a) {
 		copcon = a;
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			cop_state,cop1lc,cop2lc,copcon,
+		}; },
+		set: function(s) {
+			cop_state=s.cop_state;
+			cop1lc=s.cop1lc;
+			cop2lc=s.cop2lc;
+			copcon=s.copcon;
+		},
+		functions: function() { return {
+			copper_state,check_copper_stop,put16_copper,update_copper,test_copper_dangerous,
+		}; },
+		constants: function() { return {
+			customdelay,COP_stop,COP_waitforever,COP_read1,COP_read2,COP_bltwait,COP_wait_in2,COP_skip_in2,
+			COP_wait1,COP_wait,COP_skip1,COP_strobe_delay1,COP_strobe_delay2,COP_strobe_delay1x,
+			COP_strobe_delay2x,COP_strobe_extra,COP_start_delay,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

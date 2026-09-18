@@ -429,6 +429,14 @@ function SAEO_Events() {
 		}
 	}
 
+	function dmal_handler(v) {
+		while (dmal) {
+			if (dmal & 3) dmal_emu(dmal_hpos + ((dmal & 2) ? 1 : 0));
+			dmal_hpos += 2;
+			dmal >>>= 2;
+		}
+	}
+
 	this.events_dmal_hsync = function() {
 		if (dmal) SAEF_error("events.events_dmal_hsync() DMAL error!? %04x", dmal);
 		dmal = SAER.audio.dmal();
@@ -436,15 +444,7 @@ function SAEO_Events() {
 		dmal |= SAER.disk.dmal();
 		if (dmal) {
 			dmal_hpos = 0;
-			//SAER.events.event2_newevent2(7, 13, function(v) {
-			SAER.events.event2_newevent_xx(-1, 7 * SAEC_Events_CYCLE_UNIT, 13, function(v) {
-				while (dmal) {
-					if (dmal & 3)
-						dmal_emu(dmal_hpos + ((dmal & 2) ? 1 : 0));
-					dmal_hpos += 2;
-					dmal >>>= 2;
-				}
-			});
+			SAER.events.event2_newevent_xx(-1, 7 * SAEC_Events_CYCLE_UNIT, 13, dmal_handler);
 		}
 	}
 
@@ -737,4 +737,33 @@ function SAEO_Events() {
 		}
 		this.alloc_cycle(hpos, SAEC_Events_cycle_line_BLITTER);
 	}*/
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			eventtab,eventtab2,nextevent,linecounter,vsynctimebase,vsynctimeperline,dmal,dmal_hpos,dorecheck,
+			recursive,nextno,pissoff,
+		}; },
+		set: function(s) {
+			eventtab=s.eventtab;
+			eventtab2=s.eventtab2;
+			nextevent=s.nextevent;
+			linecounter=s.linecounter;
+			vsynctimebase=s.vsynctimebase;
+			vsynctimeperline=s.vsynctimeperline;
+			dmal=s.dmal;
+			dmal_hpos=s.dmal_hpos;
+			dorecheck=s.dorecheck;
+			recursive=s.recursive;
+			nextno=s.nextno;
+			pissoff=s.pissoff;
+		},
+		functions: function() { return {
+			Event,Event2,MISC_handler,event2_newevent_x,dmal_emu,dmal_handler,fpscounter_reset,rpt_vsync,
+		}; },
+		constants: function() { return {
+			EV_MISC,EV_MAX,EV2_MISC,EV2_MAX,MAVG_VSYNC_SIZE,FPSCOUNTER_MAVG_SIZE,PISSOFF_NOJIT_VALUE,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

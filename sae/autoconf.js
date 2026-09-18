@@ -724,4 +724,42 @@ function SAEO_AutoConf() {
 	this.init_extended_traps = function() {
 
 	}
+
+	// BEGIN GENERATED STATE ACCESS — tools/generate-state-access.cjs
+	Object.defineProperty(this, "_saeState", {value: {
+		get: function() { return {
+			hardware_trap_event,rt_trampoline_ptr,trap_entry,filesystem_state,uae_int_requested,rtarea_bank,
+			rt_addr,rt_straddr,trap_count,traps,vi,hwtrap_waiting,
+		}; },
+		set: function(s) {
+			hardware_trap_event=s.hardware_trap_event;
+			rt_trampoline_ptr=s.rt_trampoline_ptr;
+			trap_entry=s.trap_entry;
+			filesystem_state=s.filesystem_state;
+			uae_int_requested=s.uae_int_requested;
+			rtarea_bank=s.rtarea_bank;
+			rt_addr=s.rt_addr;
+			rt_straddr=s.rt_straddr;
+			trap_count=s.trap_count;
+			traps=s.traps;
+			vi=s.vi;
+			hwtrap_waiting=s.hwtrap_waiting;
+		},
+		functions: function() { return {
+			check_boot_rom,hwtrap_check_int,rtarea_trap_data,rtarea_trap_status,rtarea_get32,rtarea_get16,
+			rtarea_get8,rtarea_write,rtarea_put8,rtarea_put16,rtarea_put32,rtarea_xlate,rtarea_check,addr,
+			mapped_malloc,mapped_free,Trap,
+		}; },
+		constants: function() { return {
+			RTAREA_DEFAULT,RTAREA_BACKUP,RTAREA_BACKUP_2,RTAREA_SIZE,RTAREA_TRAPS,RTAREA_RTG,
+			RTAREA_TRAMPOLINE,RTAREA_DATAREGION,RTAREA_FSBOARD,RTAREA_HEARTBEAT,RTAREA_TRAPTASK,
+			RTAREA_EXTERTASK,RTAREA_INTREQ,RTAREA_TRAP_DATA,RTAREA_TRAP_DATA_SIZE,RTAREA_TRAP_DATA_SLOT_SIZE,
+			RTAREA_TRAP_DATA_SECOND,RTAREA_TRAP_DATA_TASKWAIT,RTAREA_TRAP_DATA_EXTRA,
+			RTAREA_TRAP_DATA_EXTRA_SIZE,RTAREA_TRAP_SEND_DATA,RTAREA_TRAP_SEND_DATA_SIZE,RTAREA_TRAP_STATUS,
+			RTAREA_TRAP_STATUS_SIZE,RTAREA_TRAP_STATUS_SECOND,RTAREA_TRAP_SEND_STATUS,RTAREA_SYSBASE,
+			RTAREA_TRAP_DATA_NUM,RTAREA_WRITEOFFSET,TRAPFLAG_NO_REGSAVE,TRAPFLAG_NO_RETVAL,
+			TRAPFLAG_EXTRA_STACK,TRAPFLAG_DORET,TRAPFLAG_UAERES,MAX_TRAPS,trace_traps,
+		}; }
+	}});
+	// END GENERATED STATE ACCESS
 }

@@ -34,8 +34,11 @@
 <script type="text/javascript" src="sae/rtc.js"></script>
 <script type="text/javascript" src="sae/m68k.js"></script>
 <script type="text/javascript" src="sae/cpu.js"></script>
+<script src="sae/state-globals.js"></script>
+<script src="sae/state.js"></script>
 <script type="text/javascript" src="sae/amiga.js"></script>
 <script src="sae/ffs.js"></script><script src="sae/whdload.js"></script>
+<script src="launcher/checkpoints.js"></script>
 <script src="launcher/saves.js"></script><script src="launcher/library.js"></script><script src="launcher/system.js"></script><script src="index.js" defer></script>
 </head>
 <body>
@@ -131,8 +134,10 @@
 <p class="fine-print" id="saveSummary">Checking saves…</p>
 <button type="button" class="button" id="exportSaves">Export backup</button>
 <button type="button" class="button" id="importSaves">Import backup</button>
+<p class="fine-print" id="stateSummary"></p>
+<button type="button" class="button" id="deleteState" disabled>Delete saved position</button>
 <button type="button" class="button" id="deleteSaves" disabled>Delete stored data</button>
-<p class="fine-print">Stored data includes saves and crash dumps. Deleting it resets this game’s disks. Original game files are kept.</p>
+<p class="fine-print">Backups contain disk saves. Deleting stored data resets this game’s disks and saved position. Original game files are kept.</p>
 </div></details>
 <details><summary>Advanced hardware<span>CPU, memory, disks</span></summary><div class="setting-group">
 <label class="setting"><span>CPU</span><select name="cpu"><option value="auto">Match the Amiga model</option><option value="68000">68000</option><option value="68010">68010</option><option value="68020">68020</option><option value="68030">68030</option></select></label>
@@ -156,6 +161,22 @@
 <div class="player-help"><span id="controlHint">Arrow keys to move · Right Shift to fire</span><span id="saveStatus" role="status" aria-live="polite">Saves stored in this browser</span><span id="mouseHint">Click game to capture mouse · Esc to release</span></div>
 <p id="playerError" role="alert" hidden></p><div id="saveRecovery" hidden><button class="button" id="retrySave">Retry save</button> <button class="button" id="exportSession">Export backup</button></div>
 </dialog>
+<dialog id="quitDialog" class="choice-dialog" aria-labelledby="quitTitle">
+<h2 id="quitTitle">Are you sure you want to quit?</h2>
+<p id="quitError" role="alert" hidden></p>
+<div class="choice-actions">
+<button class="button primary" id="quitSave">Yes, and save state</button>
+<button class="button" id="quitDiscard">Yes and don't save state</button>
+<button class="button" id="quitContinue" autofocus>No, continue playing</button>
+</div></dialog>
+<dialog id="resumeDialog" class="choice-dialog" aria-labelledby="resumeTitle">
+<h2 id="resumeTitle">Continue where you left off?</h2>
+<p id="resumeDetail" class="fine-print"></p>
+<div class="choice-actions">
+<button class="button primary" id="resumeState" autofocus>Continue playing</button>
+<button class="button" id="resumeFresh">Start normally</button>
+<button class="text-button" id="resumeCancel">Cancel</button>
+</div></dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 <noscript><p class="noscript">Enable JavaScript to browse and play your games.</p></noscript>
 </body></html>
