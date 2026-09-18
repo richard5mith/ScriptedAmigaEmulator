@@ -514,6 +514,7 @@ function SAEF_ZFile_fopen_file(file) {
 				file.data = SAEF_Array2String(data);
 				file.size = SAEF_ZFile_size(f);
 				file.prot = false;
+				f.onWrite = file.onWrite;
 				return f;
 			}
 		}
@@ -525,9 +526,11 @@ function SAEF_ZFile_fopen_file(file) {
 				file.data = SAEF_Array2String(data);
 				file.size = SAEF_ZFile_size(f);
 				file.prot = false;
+				f.onWrite = file.onWrite;
 				return f;
 			}
 		}
+		l.onWrite = file.onWrite;
 		return l;
 	}
 	return null;
@@ -747,6 +750,7 @@ function SAEF_ZFile_fwrite(b,bo, l1, l2, z) {
 		z.size = z.seek;
 	if (z.size > z.datasize)
 		z.datasize = z.size;
+	if (l1 * l2 > 0 && typeof z.onWrite === "function") z.onWrite(z.data, z.size, z.name);
 	return l2;
 }
 

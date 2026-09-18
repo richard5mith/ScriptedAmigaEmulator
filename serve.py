@@ -10,6 +10,12 @@ APP = Path(__file__).resolve().parent
 MAX_FILES = 10000
 
 
+class LauncherServer(ThreadingHTTPServer):
+    # Browsers preload many emulator scripts at once. Keep the accept queue
+    # large enough that short bursts do not drop a required module.
+    request_queue_size = 128
+
+
 def library_files(root):
     result = []
     for category in ("games", "bios"):
@@ -87,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--library", type=Path, default=APP,
                         help="Folder containing games/ and bios/ (default: beside this script)")
     args = parser.parse_args()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(args.library.resolve()))
+    server = LauncherServer(("127.0.0.1", args.port), make_handler(args.library.resolve()))
     print(f"Your Amiga is ready at http://localhost:{args.port}", flush=True)
     try:
         server.serve_forever()

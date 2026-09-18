@@ -7,7 +7,8 @@ several independent subsystems. Archive loading alone cannot fix these.
 | --- | --- |
 | ZIP, ADZ, HDZ | Implemented in frontend file preparation, with corruption checks and explicit limits. |
 | LHA/LZH | Implemented for header levels 0–3 and lh0/lh4–lh7/lz4. Add legacy adaptive Huffman methods only with independent archive fixtures. |
-| WHDLoad | Bootable FFS generation and an A1200 launcher. Qwak ZIP and Turrican LHA boot verified; expand the game regression set, import icon tooltypes, add configurable slave options and save export. |
+| WHDLoad | Bootable FFS generation and an A1200 launcher. Qwak ZIP and Turrican LHA boot verified; expand the game regression set, import icon tooltypes, add configurable slave options. Persistent disk saves and backup export/import are implemented. |
+| Exact-position snapshots | Not implemented: requires versioned CPU, memory, device and scheduler state capture/restore. See [save-states.md](save-states.md). |
 | 68000/68010 prefetch | Replace the fake prefetch model with tested instruction-fetch behavior; include self-modifying-code cases. |
 | BKPT, CALLM, RTM | Instruction handlers exist as incomplete stubs in sae/cpu.js. Implement from processor manuals with register, exception, and bus-behavior tests. Do not silently treat a stub as a working instruction. |
 | Exceptions 2/3, traps, timing | Build targeted CPU fault/exception tests, then implement model-specific frames and timing. This is a likely source of individual game incompatibilities. |

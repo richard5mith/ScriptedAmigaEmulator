@@ -49,6 +49,7 @@ function SAEO_Config_File() {
 	this.size = 0;
 	this.crc32 = false;
 	this.prot = false;
+	this.onWrite = null;
 
 	this.clr = function() {
 		//this.path = "";
@@ -57,6 +58,7 @@ function SAEO_Config_File() {
 		this.size = 0;
 		this.crc32 = false;
 		this.prot = false;
+		this.onWrite = null;
 	}
 }
 

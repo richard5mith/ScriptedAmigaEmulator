@@ -69,7 +69,7 @@ test('WHDLoad validates runtime and generates quoted startup script',async()=>{
  await assert.rejects(ctx.SAEF_WHDLoad.prepare(archive,'missing',new Uint8Array([0,0,3,243])),/slave/);
  const result=await ctx.SAEF_WHDLoad.prepare(archive,name,new Uint8Array([0,0,3,243]));
  const files=readVolume(result);
- assert.equal(files.get('S/Startup-Sequence').toString(),'Stack 16384\nCD "SYS:Games/Qwak"\nSYS:C/WHDLoad "Qwak.Slave" PRELOAD NoMMU\n');
+ assert.equal(files.get('S/Startup-Sequence').toString(),'Stack 16384\nCD "SYS:Games/Qwak"\nSYS:C/WHDLoad "Qwak.Slave" PRELOAD NoMMU NoWriteCache WriteDelay=0 ExecutePostDisk=SYS:C/FlushSaves\n');
  assert.deepEqual(files.get('Games/'+name),Buffer.from([1,2,3,4]));
 });
 test('Qwak ZIP becomes a complete WHDLoad filesystem', {skip:!fs.existsSync(gamePath)},async()=>{

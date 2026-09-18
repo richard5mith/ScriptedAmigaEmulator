@@ -9,6 +9,14 @@ var SAESystem = (function() {
     return chunks.join('');
   }
   function configFile(file, data) {return {name:file.name, data, size:data.length, crc32:false};}
+  function attachMedia(file, media) {
+    Object.assign(file,media);
+    if(media.onWrite)file.onWrite=(data,size,name)=>{
+      // Reset/reopen must see the latest bytes, not the original source image.
+      file.data=data.subarray(0,size);file.size=size;file.name=name;file.crc32=false;
+      media.onWrite(data,size,name);
+    };
+  }
   function kickName(info) {
     if(!info) return null;
     if(info.subVer===34 && info.subRev===5) return 'kick34005.A500';
@@ -104,5 +112,5 @@ var SAESystem = (function() {
     if(binary(data.subarray(0,4))==='RDSK'){ci.surfaces=0;ci.sectors=0;ci.highcyl=0;}
     ci.bootpri=0;ci.bootable=true;ci.readonly=readonly;
   }
-  return {defaults,binary,configFile,kickName,scan,configure,mount};
+  return {defaults,binary,configFile,attachMedia,kickName,scan,configure,mount};
 })();

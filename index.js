@@ -4,6 +4,8 @@
   const $=id=>document.getElementById(id), icon=name=>'<svg aria-hidden="true"><use href="#i-'+name+'"/></svg>';
   const emulator=new ScriptedAmigaEmulator();
   let files=[], games=[], system={roms:[],runtimes:[],support:{entries:[]},warnings:[]}, view='all', scanning=false, settingsGame=null;
+  let saveStorePromise=null;
+  function saveStore(){if(!saveStorePromise)saveStorePromise=SAESaves.open().catch(error=>{saveStorePromise=null;throw error;});return saveStorePromise;}
   let current=null, launchToken=0, scanToken=0, importRole='', savedHandle=null, toastTimer;
   const history=readStorage('sae.library.history',{}), favorites=new Set(readStorage('sae.library.favorites',[]));
   let preferences=readStorage('sae.launcher.settings',{}), gamePreferences=readStorage('sae.launcher.games',{});
@@ -140,6 +142,7 @@
     settingsGame=game;populateSystemOptions();
     $('settingsTitle').textContent=game?game.title:'Launcher settings';
     $('settingsDescription').textContent=game?'Settings for this game.':'Defaults for all games.';
+    $('gameSaves').hidden=!game;if(game)updateSaveSummary(game);
     $('gameVariants').hidden=true;fillForm(settings(game));$('settingsDialog').showModal();
     if(game) {
       try {
@@ -162,12 +165,18 @@
   async function playGame(game) {
     if(current||scanning)return;
     const token=++launchToken, options=settings(game);current={game,token,running:false,paused:false,muted:!options.sound,options,disks:[]};
+    $('stopGame').disabled=false;$('saveRecovery').hidden=true;$('saveStatus').textContent='Saves stored in this browser';
     $('playingTitle').textContent=game.title;$('playerError').hidden=true;$('bootMessage').hidden=false;$('bootText').textContent='Getting '+game.title+' ready…';
     $('mouseHint').textContent=options.mouseLock?'Click game to capture mouse · Esc to release':'Mouse capture off';
     $('diskControl').hidden=true;$('pauseGame').setAttribute('aria-pressed','false');$('pauseGame').setAttribute('aria-label','Pause game');$('pauseGame').title='Pause';$('pauseGame').innerHTML=icon('pause');$('muteGame').setAttribute('aria-pressed',String(!options.sound));
     $('playerDialog').showModal();$('screenWrap').className='screen-wrap '+options.picture;
     $('playerMachine').textContent='Amiga '+options.model.slice(1);$('controlHint').textContent=options.controller==='gamepad'?'Use your connected gamepad':(options.movement==='wasd'?'W A S D':'Arrow keys')+' to move · '+({ShiftRight:'Right Shift',ControlRight:'Right Ctrl',Space:'Space'}[options.fire])+' to fire';
+    const active=current;
     try {
+      const release=await SAESaves.lock(game.id);
+      if(token!==launchToken){release();return;}active.release=release;
+      active.saves=new SAESaves.Session(await saveStore(),game.id,(state,detail)=>saveStatus(active,state,detail));
+      if(token!==launchToken){active.saves.close();return;}
       const meta=await metadata(game);if(token!==launchToken)return;
       const rom=SAELibrary.chooseRom(system.roms,options.model,options.rom);
       if(!rom)throw new Error(options.rom==='auto'?'No suitable Kickstart ROM for '+options.model+'. Add a Kickstart 3.1 ROM to bios/ for the default A1200.':'The selected Kickstart ROM is missing. Choose another ROM in game settings.');
@@ -186,16 +195,19 @@
         for(const entry of entries)floppy.push(await SAELibrary.image(entry));
       }
       if(token!==launchToken)return;
+      if(hardfile)hardfile=await active.saves.mount(hardfile,'hardfile:'+selected.name,options.readonly);
+      floppy=await Promise.all(floppy.map(disk=>active.saves.mount(disk,'floppy:'+disk.name,options.readonly)));
+      if(token!==launchToken)return;
       const cfg=SAESystem.configure(emulator,options,rom,system.key);
-      if(hardfile)SAESystem.mount(cfg,hardfile.name,hardfile.data,options.readonly);
-      for(let i=0;i<floppy.length;i++) {cfg.floppy.drive[i].type=SAEC_Config_Floppy_Type_35_DD;Object.assign(cfg.floppy.drive[i].file,SAESystem.configFile(floppy[i],floppy[i].data));cfg.floppy.drive[i].file.prot=options.readonly;}
+      if(hardfile){SAESystem.mount(cfg,hardfile.name,hardfile.data,options.readonly);SAESystem.attachMedia(cfg.mount.config[0].ci.file,hardfile);}
+      for(let i=0;i<floppy.length;i++) {cfg.floppy.drive[i].type=SAEC_Config_Floppy_Type_35_DD;SAESystem.attachMedia(cfg.floppy.drive[i].file,floppy[i]);cfg.floppy.drive[i].file.prot=options.readonly;}
       cfg.hook.log.error=(code,message)=>{if(token===launchToken){$('playerError').hidden=false;$('playerError').textContent=message||'The emulator reported error '+code+'. Try another Amiga model in game settings.';}};
       cfg.hook.event.started=()=>{
         if(token!==launchToken)return;current.running=true;$('bootMessage').hidden=true;$('myVideo').focus();
         history[game.id]=Date.now();save('sae.library.history',history);game.error=null;
         if(current.disks.length>1){const select=$('diskSelect');select.replaceChildren();current.disks.forEach((disk,i)=>select.add(new Option(disk.name,String(i))));select.value=String(current.diskIndex);$('diskControl').hidden=false;}
       };
-      cfg.hook.event.stopped=()=>finishPlayer(token);
+      cfg.hook.event.stopped=()=>{active.running=false;finishPlayer(token);};
       cfg.hook.event.paused=paused=>{if(!current)return;paused=!!paused;current.paused=paused;$('pauseGame').setAttribute('aria-pressed',String(paused));$('pauseGame').setAttribute('aria-label',paused?'Resume game':'Pause game');$('pauseGame').title=paused?'Resume':'Pause';$('pauseGame').innerHTML=icon(paused?'play':'pause');};
       const error=emulator.start();if(error!==SAEE_None)throw new Error('Couldn’t start this game (code '+error+'). Check the ROM or try another Amiga model in game settings.');
     } catch(error) {
@@ -206,12 +218,19 @@
       $('noticeAction').onclick=()=>/ROM|Kickstart|WHDLoad/.test(error.message)?addSystemFiles():openSettings(game);
     }
   }
-  function finishPlayer(token) {
-    if(token!==launchToken)return;
-    current=null;++launchToken;setExpanded(false);$('playerDialog').close();$('myVideo').replaceChildren();render();
+  async function finishPlayer(token) {
+    if(token!==launchToken||current.finishing)return;
+    const active=current;active.finishing=true;$('stopGame').disabled=true;
+    try {
+      if(active.saves)await active.saves.flush();
+      if(token!==launchToken)return;
+      active.saves?.close();active.release?.();
+      current=null;++launchToken;setExpanded(false);$('playerDialog').close();$('myVideo').replaceChildren();render();
+    } catch(error){saveStatus(active,'error',error);}
+    finally{active.finishing=false;$('stopGame').disabled=false;}
   }
   function stopGame() {
-    if(!current)return;
+    if(!current||current.finishing)return;
     if(!current.running){finishPlayer(current.token);return;}
     if(current.paused)emulator.pause(false);
     const error=emulator.stop();if(error!==SAEE_None)finishPlayer(current.token);
@@ -238,12 +257,42 @@
   $('fullscreenGame').onclick=()=>setExpanded(!$('playerDialog').classList.contains('expanded'));
   $('diskSelect').onchange=async()=>{
     if(!current?.running)return;const active=current, select=$('diskSelect'), index=Number(select.value);select.disabled=true;
-    try{const disk=await SAELibrary.image(active.disks[index]);if(current!==active)return;const file=emulator.getConfig().floppy.drive[0].file;Object.assign(file,SAESystem.configFile(disk,disk.data));file.prot=active.options.readonly;const error=emulator.insert(0);if(error!==SAEE_None)throw new Error('Could not insert this disk.');active.diskIndex=index;}
+    try{let disk=await SAELibrary.image(active.disks[index]);disk=await active.saves.mount(disk,'floppy:'+disk.name,active.options.readonly);if(current!==active)return;const file=emulator.getConfig().floppy.drive[0].file;SAESystem.attachMedia(file,disk);file.prot=active.options.readonly;const error=emulator.insert(0);if(error!==SAEE_None)throw new Error('Could not insert this disk.');active.diskIndex=index;}
     catch(error){select.value=String(active.diskIndex);$('playerError').hidden=false;$('playerError').textContent=error.message;}
     finally{select.disabled=false;}
   };
   // Keep launcher controls keyboard-accessible while SAE listens for game keys on document.
   for(const type of ['keydown','keyup'])$('playerDialog').addEventListener(type,event=>{if(event.target.closest('button,select'))event.stopPropagation();});
+  function saveStatus(active,state,detail) {
+    if(current!==active)return;
+    $('saveStatus').textContent=state==='restored'?'Saved disk restored':state==='saving'?'Saving…':state==='saved'?'Disk changes saved':state==='error'?'Save failed':'Saves stored in this browser';
+    if(state==='error'){
+      setExpanded(false);$('playerError').hidden=false;$('saveRecovery').hidden=false;
+      $('playerError').textContent='Could not store game saves: '+detail.message+' Retry or export a backup before closing.';
+    } else if(state==='saved'){$('saveRecovery').hidden=true;$('playerError').hidden=true;}
+  }
+  async function updateSaveSummary(game) {
+    $('saveSummary').textContent='Checking saves…';
+    try{const records=await (await saveStore()).list(game.id);if(settingsGame!==game)return;
+      $('saveSummary').textContent=records.length?'Saved '+new Date(Math.max(...records.map(r=>r.updatedAt))).toLocaleString():'No saved disk changes yet.';
+    }catch(error){$('saveSummary').textContent='Save storage unavailable: '+error.message;}
+  }
+  async function downloadSaves(records,title) {
+    const blob=await SAESaves.exportFile(records,title),url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download=title.replace(/[^a-z0-9 _-]/gi,'')+'.saesave';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+  }
+  $('exportSaves').onclick=async()=>{try{const game=settingsGame;await downloadSaves(await(await saveStore()).list(game.id),game.title);}catch(error){toast(error.message);}};
+  $('importSaves').onclick=()=>$('saveInput').click();
+  $('saveInput').onchange=async event=>{
+    const file=event.target.files[0],game=settingsGame;event.target.value='';if(!file||!game)return;let release;
+    try{release=await SAESaves.lock(game.id);await SAESaves.importFile(file,game.id,await saveStore());await updateSaveSummary(game);toast('Save backup imported.');}
+    catch(error){toast(error.message);}finally{release?.();}
+  };
+  $('retrySave').onclick=async()=>{const active=current;if(!active)return;try{await active.saves.flush();if(!active.running)await finishPlayer(active.token);}catch{}};
+  $('exportSession').onclick=async()=>{try{const active=current;if(active)await downloadSaves(await active.saves.records(),active.game.title);}catch(error){toast(error.message);}};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)current?.saves?.flush().catch(()=>{});});
+  window.addEventListener('pagehide',()=>{current?.saves?.flush().catch(()=>{});});
+  window.addEventListener('beforeunload',event=>{if(current?.saves?.dirty){event.preventDefault();event.returnValue='';}});
   function addSystemFiles() {importRole='bios/';$('fileInput').click();}
   $('addBios').onclick=()=>{$('settingsDialog').close();addSystemFiles();};
   $('noticeAction').onclick=()=>{if($('noticeAction').textContent==='Choose folder')addDialog();else addSystemFiles();};

@@ -50,15 +50,44 @@ slave under the game's settings if a package has several versions.
 You can download that from https://www.whdload.de/index.html. 
 
 The launcher builds an FFS hardfile with the game, runtime and startup script,
-using `PRELOAD NoMMU`. No Workbench HDF is required for the tested games. Known
+using `PRELOAD NoMMU NoWriteCache`, plus an explicit filesystem flush after disk I/O. No Workbench HDF is required for the tested games. Known
 ROMs are also copied under their WHDLoad support names in `Devs/Kickstarts/`.
 Games using kickemu may need matching RTB files in `bios/` or a support archive
 there. ROMs, games and WHDLoad binaries are not bundled.
 
 Installers requiring original disks are not preinstalled games. Icon tooltypes
-and custom options are not automatically imported. Changes and game saves stay
-in memory and are lost on reload or a new start. Existing emulator compatibility
+and custom options are not automatically imported. Existing emulator compatibility
 limits still apply.
+
+## Game saves
+
+Use the game's own Save/Load menu. Writable disk changes are stored automatically
+in IndexedDB and restored on the next launch, including after a page reload.
+WHDLoad runs with `NoWriteCache` so saves reach the disk during play instead of
+waiting for WHDLoad to exit. `C/FlushSaves` sends the filesystem an `ACTION_FLUSH`
+packet after disk access, allowing `WriteDelay=0` without leaving dirty filesystem
+buffers behind. It falls back to the original safety delay if flushing fails.
+Source: [native/FlushSaves.s](native/FlushSaves.s). Let the game's save operation
+finish before leaving.
+The launcher shows when disk changes have been stored and waits for pending
+storage writes when returning to the library.
+
+In a game's settings, **Saved games** offers **Export backup** and **Import backup**
+using `.saesave` files. Backups contain modified disk images. Browser storage is
+specific to the browser profile and site address; clearing site data removes
+saves. Export backups before clearing data, switching browsers or changing the
+server address. Source archives and files in games/ are never modified.
+
+Saves are matched to the game, disk member and original media SHA-256. A different
+archive/build or regenerated WHDLoad disk with different BIOS/runtime contents
+will not silently reuse an incompatible save image. Read-only media can restore
+existing saves but cannot write new changes. A quota/storage error is shown with
+Retry and Export backup actions; pending changes stay in memory for recovery.
+Concurrent tabs cannot play the same game when Web Locks is available; IndexedDB
+revision checks also prevent a stale writer from overwriting newer saves.
+
+Exact-position snapshots are not implemented. Disk saves do not capture running
+RAM, CPU registers or chipset state. See [snapshot requirements](docs/save-states.md).
 
 ## Archive limits
 
@@ -112,3 +141,8 @@ See [docs/compatibility-roadmap.md](docs/compatibility-roadmap.md) for the other
 README limitations. This change addresses compressed media and WHDLoad loading;
 it does not claim to implement the missing CPU instructions, MMU, SCSI, or
 protected-disk formats.
+
+The optional browser integration test is `node tests/saves.browser.cjs`. It needs
+Playwright, Python, and local Qwak/BIOS files. Set `PLAYWRIGHT_MODULE` and
+`CHROMIUM_EXECUTABLE` when they are installed outside this project. It verifies
+real disk writes, page reload restoration, backup download and stale-write rejection.

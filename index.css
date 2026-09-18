@@ -18,3 +18,4 @@ dialog{color:var(--ink);border:1px solid #3d444e;border-radius:10px;box-shadow:0
 .player-dialog.expanded .player-toolbar{position:absolute;right:16px;bottom:16px;z-index:2;padding:0;border:0}
 .player-dialog.expanded #fullscreenGame{width:40px;height:40px;margin:0;background:#17191cbf;color:#d3dbe4;border:1px solid #ffffff20}
 .player-dialog.expanded #fullscreenGame:hover{background:#303741}
+#saveRecovery{padding:0 22px 18px}.player-dialog.expanded #saveRecovery{display:none}#saveStatus{color:#a6b8a9}

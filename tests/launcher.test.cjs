@@ -47,3 +47,8 @@ test('mirrored 256 KB ROM dump is identified and included under WHDLoad name',as
  assert.equal(result.roms[0].info.subVer,34);assert.equal(result.roms[0].data.length,256*1024);
  assert.equal(result.support.entries[0].name,'Devs/Kickstarts/kick34005.A500');
 });
+test('mounted file config follows writes so reset/reopen preserves changed bytes',()=>{
+ let notified=false;const target={};system.attachMedia(target,{name:'disk.adf',size:3,data:new Uint8Array([0,0,0]),onWrite:()=>notified=true});
+ target.onWrite(new Uint8Array([1,2,3,4]),4,'converted.adf');
+ assert.equal(notified,true);assert.equal(target.name,'converted.adf');assert.equal(target.size,4);assert.deepEqual([...target.data],[1,2,3,4]);
+});

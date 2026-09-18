@@ -1,0 +1,51 @@
+// Optional integration test. Requires local Qwak.zip, BIOS, Python and Playwright.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const {spawn}=require('node:child_process'),assert=require('node:assert/strict'),path=require('node:path');
+(async()=>{
+ const server=spawn(process.env.PYTHON||'python3',['-u','serve.py','--port','18782'],{cwd:path.resolve(__dirname,'..'),stdio:['ignore','pipe','pipe']});let browser;
+ try{
+  await new Promise((resolve,reject)=>{server.stdout.once('data',resolve);server.once('error',reject);server.once('exit',code=>reject(Error('Server exited: '+code)));});
+  // Drain logs so the server never blocks on a full pipe.
+  server.stdout.on('data',()=>{});server.stderr.on('data',()=>{});
+  browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--autoplay-policy=no-user-gesture-required']});
+  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const url='http://127.0.0.1:18782/';
+  async function library(){await page.goto(url);await page.getByRole('button',{name:'Play Qwak',exact:true}).waitFor();await page.waitForFunction(()=>!document.querySelector('.play-button').disabled);}
+  async function play(){await page.getByRole('button',{name:'Play Qwak',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#bootMessage').hidden);}
+  await library();
+  await page.evaluate(()=>{
+    const open=SAEF_ZFile_fopen_file;
+    SAEF_ZFile_fopen_file=function(file){const result=open(file);if(file.name==='Qwak.hdf')window.testMedia=result;return result;};
+  });
+  await play();
+  const marker=[83,65,86,69,84,69,83,84];
+  await page.evaluate(marker=>{
+    if(!window.testMedia||typeof testMedia.onWrite!=='function')throw new Error('Writable disk hook missing');
+    // An otherwise-unused data block: exercises SAE's real disk write path.
+    SAEF_ZFile_fseek(testMedia,testMedia.size-marker.length,0);
+    SAEF_ZFile_fwrite(new Uint8Array(marker),0,1,marker.length,testMedia);
+  },marker);
+  await page.waitForFunction(()=>document.querySelector('#saveStatus').textContent==='Disk changes saved');
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
+  await library();await play();
+  assert.deepEqual(await page.evaluate(()=>Array.from(SAEV_config.mount.config[0].ci.file.data.slice(-8))),marker);
+  assert.equal(await page.locator('#saveStatus').textContent(),'Saved disk restored');
+  await page.getByRole('button',{name:'Back to library',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#playerDialog').open);
+  await page.getByRole('button',{name:'Settings for Qwak',exact:true}).click();
+  await page.locator('#gameSaves summary').click();
+  await page.waitForFunction(()=>document.querySelector('#saveSummary').textContent.startsWith('Saved '));
+  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export backup',exact:true}).click();assert.equal((await download).suggestedFilename(),'Qwak.saesave');
+  // The real IndexedDB backend rejects stale writers and preserves the winner.
+  await page.evaluate(async()=>{
+    const store=await SAESaves.open(),a=new SAESaves.Session(store,'conflict-test'),b=new SAESaves.Session(store,'conflict-test');
+    const image=()=>({name:'disk.adf',data:new Uint8Array([0,0,0,0])});
+    const x=await a.mount(image(),'disk'),y=await b.mount(image(),'disk');
+    x.onWrite(new Uint8Array([1,1,1,1]),4,x.name);await a.flush();
+    y.onWrite(new Uint8Array([2,2,2,2]),4,y.name);
+    let rejected=false;try{await b.flush();}catch{rejected=true;}if(!rejected)throw new Error('Stale write accepted');
+    if((await store.list('conflict-test'))[0].data[0]!==1)throw new Error('Stale write replaced save');
+    a.close();b.close();
+  });
+  assert.deepEqual(errors,[]);console.log('PASS real disk write, IndexedDB, stop/relaunch, page reload, backup download, conflict protection');
+ }finally{if(browser)await browser.close();server.kill();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -36,7 +36,7 @@
 <script type="text/javascript" src="sae/cpu.js"></script>
 <script type="text/javascript" src="sae/amiga.js"></script>
 <script src="sae/ffs.js"></script><script src="sae/whdload.js"></script>
-<script src="launcher/library.js"></script><script src="launcher/system.js"></script><script src="index.js" defer></script>
+<script src="launcher/saves.js"></script><script src="launcher/library.js"></script><script src="launcher/system.js"></script><script src="index.js" defer></script>
 </head>
 <body>
 <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -99,6 +99,7 @@
 </dialog>
 <input type="file" id="folderInput" webkitdirectory multiple hidden>
 <input type="file" id="fileInput" multiple hidden>
+<input type="file" id="saveInput" accept=".saesave,application/json" hidden>
 <dialog id="settingsDialog" class="settings-dialog" aria-labelledby="settingsTitle">
 <form id="settingsForm">
 <div class="dialog-heading"><div><h2 id="settingsTitle">Launcher settings</h2></div><button type="button" class="icon-button" data-close="settingsDialog" aria-label="Close settings"><svg><use href="#i-x"/></svg></button></div>
@@ -126,6 +127,12 @@
 <div id="biosSummary" class="bios-summary"></div><button type="button" class="button" id="addBios"><svg><use href="#i-plus"/></svg>Add system files</button>
 <p class="fine-print">Put your Kickstart ROMs, WHDLoad archive and optional RTB files in bios/. </p>
 </div></details>
+<details id="gameSaves" hidden><summary>Saved games</summary><div class="setting-group">
+<p class="fine-print" id="saveSummary">Checking saves…</p>
+<button type="button" class="button" id="exportSaves">Export backup</button>
+<button type="button" class="button" id="importSaves">Import backup</button>
+<p class="fine-print">Use Save inside the game. Disk changes are kept in this browser. Export a backup before clearing browser data.</p>
+</div></details>
 <details><summary>Advanced hardware<span>CPU, memory, disks</span></summary><div class="setting-group">
 <label class="setting"><span>CPU</span><select name="cpu"><option value="auto">Match the Amiga model</option><option value="68000">68000</option><option value="68010">68010</option><option value="68020">68020</option><option value="68030">68030</option></select></label>
 <label class="setting"><span>CPU speed</span><select name="speed"><option value="original">Original</option><option value="maximum">Maximum</option></select></label>
@@ -136,7 +143,7 @@
 <label class="setting"><span>Floppy speed</span><select name="floppySpeed"><option value="100">Original</option><option value="200">2×</option><option value="800">8×</option></select></label>
 <label class="setting"><span>Protect disks from writes</span><input name="readonly" type="checkbox" role="switch"></label>
 <label class="setting"><span>Load disks into extra drives</span><input name="multiDrive" type="checkbox" role="switch"></label>
-<p class="fine-print">By default, multi-disk games use the in-game disk switcher. Changes and saves stay in memory for this session.</p>
+<p class="fine-print">By default, multi-disk games use the in-game disk switcher. Disk changes are saved in this browser.</p>
 </div></details>
 </div>
 <div class="dialog-footer"><button type="button" class="text-button" id="resetSettings">Restore defaults</button><button class="button primary" type="submit">Save settings<svg><use href="#i-check"/></svg></button></div>
@@ -145,8 +152,8 @@
 <div class="player-header"><div><h2 id="playingTitle"></h2></div><button class="button player-back" id="stopGame"><svg><use href="#i-x"/></svg>Back to library</button></div>
 <div class="screen-wrap" id="screenWrap"><div id="myVideo" tabindex="0" aria-label="Game display"></div><div class="boot-message" id="bootMessage"><span class="spinner"></span><strong id="bootText">Getting your game ready…</strong></div></div>
 <div class="player-toolbar"><div class="player-controls"><button class="icon-button" id="pauseGame" aria-label="Pause game" title="Pause"><svg><use href="#i-pause"/></svg></button><button class="icon-button" id="muteGame" aria-label="Mute sound" title="Mute"><svg><use href="#i-volume"/></svg></button><button class="icon-button" id="resetGame" aria-label="Restart game" title="Restart"><svg><use href="#i-refresh"/></svg></button></div><label id="diskControl" class="disk-control" hidden>Disk<select id="diskSelect" aria-label="Change game disk"></select></label><span id="playerMachine">Amiga 1200</span><button class="icon-button" id="fullscreenGame" aria-label="Expand game" aria-pressed="false" title="Fill browser page"><svg><use href="#i-expand"/></svg></button></div>
-<div class="player-help"><span id="controlHint">Arrow keys to move · Right Shift to fire</span><span id="mouseHint">Click game to capture mouse · Esc to release</span></div>
-<p id="playerError" role="alert" hidden></p>
+<div class="player-help"><span id="controlHint">Arrow keys to move · Right Shift to fire</span><span id="saveStatus" role="status" aria-live="polite">Saves stored in this browser</span><span id="mouseHint">Click game to capture mouse · Esc to release</span></div>
+<p id="playerError" role="alert" hidden></p><div id="saveRecovery" hidden><button class="button" id="retrySave">Retry save</button> <button class="button" id="exportSession">Export backup</button></div>
 </dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 <noscript><p class="noscript">Enable JavaScript to browse and play your games.</p></noscript>

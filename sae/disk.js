@@ -4375,6 +4375,7 @@ function SAEO_Disk() {
 		//changed_prefs.floppyslots[drv.num].file.name = name;
 		SAEF_ZFile_fclose(drv.diskfile);
 
+		f.onWrite = file.onWrite;
 		drv.diskfile = f;
 		drv.filetype = ADF_EXT2;
 		//read_header_ext2(drv.diskfile, drv.trackdata, &drv.num_tracks, &drv.ddhd);
