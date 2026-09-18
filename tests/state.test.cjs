@@ -37,3 +37,20 @@ test('immutable hardware lookup-table pointers resolve to the fresh core table',
  const old=[1,2,3],fresh=[1,2,3],before=registry(),after=registry();before.externals=new Map([[old,'diagram']]);after.byExternal=new Map([['diagram',fresh]]);
  const result=codec.decode(codec.encode({selected:old},before),after).result;assert.equal(result.selected,fresh);
 });
+test('legacy event pacing fields migrate without relaxing guest-device validation',()=>{
+ let state={nextevent:10,eventtab:[{time:42}]};const device={};
+ Object.defineProperty(device,'_saeState',{value:{get:()=>state,set:s=>state=s}});
+ const reg=registry();reg.anchors.set(device,'machine/devices/events');reg.byAnchor.set('machine/devices/events',device);
+ const stored=codec.encode(device,reg),priv=stored.nodes[stored.nodes[stored.root.ref].private.ref];
+ priv.props.push(['is_syncline',2],['is_syncline_end',987654321]);
+ const decoded=codec.decode(stored,reg);assert.equal(state.nextevent,10);decoded.commit();
+ assert.deepEqual(Object.keys(state),['nextevent','eventtab']);assert.equal(state.eventtab[0].time,42);
+ assert.ok(priv.props.some(([key])=>key==='is_syncline'),'migration leaves the stored snapshot intact');
+ priv.props.push(['unknown_guest_field',1]);
+ assert.throws(()=>codec.decode(stored,reg),/unexpected: unknown_guest_field/);
+ priv.props=priv.props.filter(([key])=>!['unknown_guest_field','eventtab'].includes(key));
+ assert.throws(()=>codec.decode(stored,reg),/missing: eventtab/);
+ const other=codec.encode(device,reg);other.nodes[other.root.ref].anchor='other';reg.byAnchor.set('other',device);
+ other.nodes[other.nodes[other.root.ref].private.ref].props.push(['is_syncline',2]);
+ assert.throws(()=>codec.decode(other,reg),/unexpected: is_syncline/);
+});

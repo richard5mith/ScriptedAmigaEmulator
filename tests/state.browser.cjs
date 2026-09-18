@@ -36,22 +36,33 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
   await quit();await page.getByRole('button',{name:'No, continue playing',exact:true}).click();assert.equal(await page.evaluate(()=>SAER.paused),true);
   await page.getByRole('button',{name:'Resume game',exact:true}).click();await page.waitForFunction(()=>!SAER.paused);
   // Capture a stable hardware digest inside the real UI capture call.
-  await page.evaluate(()=>{
-    const capture=SAEState.capture;SAEState.capture=function(){const result=capture();window.beforeState=hardwareDigest();return result;};
-  });
+  await page.evaluate(legacy=>{
+    const capture=SAEState.capture;SAEState.capture=function(){
+      const result=capture();window.beforeState=hardwareDigest();
+      if(legacy){
+        const events=result.nodes.find(n=>n.anchor==='machine/devices/events');
+        result.nodes[events.private.ref].props.push(['is_syncline',2],['is_syncline_end',987654321]);
+      }
+      return result;
+    };
+  },!!process.env.STATE_LEGACY_EVENTS);
   await quit();await page.screenshot({path:'/private/tmp/sae-quit.png'});
   const start=Date.now();await page.getByRole('button',{name:'Yes, and save state',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('#playerDialog').open||!document.querySelector('#quitError').hidden);
   assert.equal(await page.locator('#quitError').isVisible(),false,await page.locator('#quitError').textContent());
   const expected=await page.evaluate(async()=>{const s=window.beforeState;return {...s,chip:await s.chip,fast:await s.fast}});console.log('Saved in',Date.now()-start,'ms');
   await library();
+  if(process.env.STATE_CHANGED_BUILD)await page.evaluate(()=>{SAEStateGlobals.build+='-changed-build-test';});
   await page.evaluate(()=>{
     // Observe the restore boundary before the first guest instruction.
     const queue=SAEState.queue;SAEState.queue=function(state,done,failed){queue(state,()=>{
       window.afterState=hardwareDigest();done();
     },failed);};
   });
-  await play();await page.getByRole('button',{name:'Continue playing',exact:true}).click();await page.waitForFunction(()=>window.afterState||!document.querySelector('#notice').hidden);assert.ok(await page.evaluate(()=>!!window.afterState),await page.locator('#noticeText').textContent());
+  await play();
+  await page.locator('#resumeDialog').waitFor({state:'visible'});
+  if(process.env.STATE_CHANGED_BUILD)assert.match(await page.locator('#resumeDetail').textContent(),/emulator has changed/);
+  await page.getByRole('button',{name:process.env.STATE_CHANGED_BUILD?'Try restoring':'Continue playing',exact:true}).click();await page.waitForFunction(()=>window.afterState||!document.querySelector('#notice').hidden);assert.ok(await page.evaluate(()=>!!window.afterState),await page.locator('#noticeText').textContent());
   const actual=await page.evaluate(async()=>{const s=window.afterState;return {...s,chip:await s.chip,fast:await s.fast}});
   assert.deepEqual(actual,expected,'CPU, clocks and all chip/fast RAM must match before the first resumed instruction');
   await page.waitForTimeout(3000);assert.equal(await page.evaluate(()=>SAER.running&&!SAER.paused),true);
@@ -89,7 +100,7 @@ const {spawn}=require('node:child_process'),assert=require('node:assert/strict')
       const hashes=(await store.list(record.gameId)).map(r=>r.hash);
       await store.saveState({...record,machine:{...record.machine,hash:'0'.repeat(64)}},record.revision);return hashes;
     });
-    await play();await page.getByRole('button',{name:'Continue playing',exact:true}).click();
+    await play();await page.getByRole('button',{name:process.env.STATE_CHANGED_BUILD?'Try restoring':'Continue playing',exact:true}).click();
     await page.waitForFunction(()=>document.querySelector('#noticeText').textContent.includes('damaged')&&!document.querySelector('#playerDialog').open);
     assert.deepEqual(await page.evaluate(async()=>(await(await SAESaves.open()).list(window.corruptGameId)).map(r=>r.hash)),diskHashes);
     await page.getByRole('button',{name:'Settings for '+title,exact:true}).click();await page.locator('#gameSaves summary').click();

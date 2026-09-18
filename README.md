@@ -33,6 +33,9 @@ game. Display, controls, system files and advanced hardware are collapsed until
 needed. Click the game display to capture the mouse; Escape releases it without
 stopping the game. Disable capture under Controls if preferred. The expand button
 fills the browser page; click it again to restore the player size.
+For CRT scanlines, phosphor texture and softened colour, choose **Display & sound →
+Picture → CRT (S-Video)**. This optional WebGL display filter works with both
+emulator renderers and falls back to the normal picture if unavailable.
 Multi-disk games have a disk selector while playing. Favorites, recent
 plays and preferences are saved in the browser.
 
@@ -98,8 +101,9 @@ new state retains any older checkpoint.
 
 Game settings also offer **Delete saved position**, which keeps ordinary disk
 saves. Checkpoints are local to this browser and are not included in `.saesave`
-disk backups. They require the same emulator build, settings, ROM and game media;
-incompatible checkpoints are rejected. There is no automatic checkpoint when
+disk backups. They require matching settings, ROM and game media. If only the emulator build
+has changed, **Try restoring** attempts the old checkpoint with a warning. Invalid
+or incompatible state data is caught during restoration. There is no automatic checkpoint when
 closing the tab. See [save-state details and tests](docs/save-states.md).
 
 ## Archive limits

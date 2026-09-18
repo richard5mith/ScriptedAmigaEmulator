@@ -39,7 +39,7 @@
 <script type="text/javascript" src="sae/amiga.js"></script>
 <script src="sae/ffs.js"></script><script src="sae/whdload.js"></script>
 <script src="launcher/checkpoints.js"></script>
-<script src="launcher/saves.js"></script><script src="launcher/library.js"></script><script src="launcher/system.js"></script><script src="index.js" defer></script>
+<script src="launcher/saves.js"></script><script src="launcher/library.js"></script><script src="launcher/system.js"></script><script src="launcher/crt.js"></script><script src="index.js" defer></script>
 </head>
 <body>
 <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -112,7 +112,7 @@
 <div id="gameVariants" hidden><label class="setting"><span><strong>Game version</strong></span><select name="variant"></select></label><p id="gameFileDetail" class="fine-print"></p></div>
 <details><summary>Display &amp; sound<span>Picture, region, audio</span></summary><div class="setting-group">
 <label class="setting"><span>Region</span><select name="region"><option value="pal">PAL · Europe</option><option value="ntsc">NTSC · North America</option></select></label>
-<label class="setting"><span>Picture</span><select name="picture"><option value="sharp">Sharp pixels</option><option value="smooth">Smooth</option><option value="scanlines">Classic scanlines</option></select></label>
+<label class="setting"><span>Picture</span><select name="picture"><option value="sharp">Sharp pixels</option><option value="smooth">Smooth</option><option value="scanlines">Classic scanlines</option><option value="crt">CRT (S-Video)</option></select></label>
 <label class="setting"><span>Renderer</span><select name="renderer"><option value="auto">Automatic</option><option value="canvas">Canvas 2D</option><option value="webgl">WebGL</option></select></label>
 <label class="setting"><span>Sound</span><input name="sound" type="checkbox" role="switch" checked></label>
 <label class="setting"><span>Stereo sound</span><input name="stereo" type="checkbox" role="switch" checked></label>

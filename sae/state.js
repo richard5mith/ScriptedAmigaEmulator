@@ -77,10 +77,20 @@ var SAEState = (function() {
         objects[i]=o;
         const props=[];if(!Array.isArray(n.props))throw Error('Invalid state object.');
         for(const [key,r]of n.props){if(['__proto__','prototype','constructor'].includes(key))throw Error('Invalid state property.');props.push([key,deref(r)]);}
-        const privateState=n.private?deref(n.private):null;
+        let privateState=n.private?deref(n.private):null;
         if(n.anchor){
           const expected=Object.keys(o._saeState.get());
-          if(!privateState||expected.length!==Object.keys(privateState).length||expected.some(k=>!Object.hasOwn(privateState,k)))throw Error('Incomplete device state: '+n.anchor);
+          // Earlier checkpoints included browser pacing deadlines. These are
+          // intentionally rebuilt at boot, not guest event-clock state.
+          if(n.anchor==='machine/devices/events'&&privateState){
+            privateState={...privateState};
+            for(const key of ['is_syncline','is_syncline_end'])if(!expected.includes(key))delete privateState[key];
+          }
+          const missing=expected.filter(k=>!privateState||!Object.hasOwn(privateState,k));
+          const extra=privateState?Object.keys(privateState).filter(k=>!expected.includes(k)):[];
+          if(!privateState||missing.length||extra.length)throw Error('Incomplete device state: '+n.anchor+
+            (missing.length?' (missing: '+missing.join(', ')+')':'')+
+            (extra.length?' (unexpected: '+extra.join(', ')+')':''));
         }
         if(n.anchor)updates.push(()=>{for(const [k,v]of props)o[k]=v;if(privateState)o._saeState.set(privateState);});
         else for(const [k,v]of props)o[k]=v;

@@ -48,7 +48,8 @@ startup. Restore runs after device reset and `custom_prepare`, before the first
 guest instruction. Audio rate and renderer must match.
 
 The launcher validates the core build fingerprint, schema, settings, ROM SHA-256
-and original prepared media hashes. Compressed machine data has a SHA-256 checksum;
+and original prepared media hashes. The presentation-only Picture setting is
+excluded from compatibility checks, so CRT can be changed without losing resume. Compressed machine data has a SHA-256 checksum;
 checkpoint disk copies have individual checksums. All graph references and device
 schemas are decoded/validated before setters run. Failure stops the fresh machine
 and leaves prior stored disks and checkpoints intact.
@@ -71,8 +72,14 @@ node tools/generate-state-access.cjs --check
 ```
 
 `SAE_TYPESCRIPT` can instead point to an installed TypeScript module. The generator
-also updates `sae/state-globals.js` with a hash of core sources. Changed core builds
-reject older checkpoints rather than guessing how private fields have changed.
+also updates `sae/state-globals.js` with a hash of core sources. A changed core build shows a warning and offers **Try restoring** when no other
+compatibility checks differ. Restore still validates the state schema, callbacks,
+device fields and runtime environment; failures stop the attempted launch and
+leave the stored checkpoint intact. A successful restore cannot guarantee that
+changed emulation code will behave identically. Older event-scheduler states may
+contain `is_syncline` and `is_syncline_end`; the loader discards these retired
+browser pacing fields while requiring every current guest-state field. Other
+schema mismatches report the missing or unexpected field names.
 Ordinary disk saves remain usable. Do not add a mutable object to the immutable
 constant registry; review the exclusion list whenever host/device state changes.
 

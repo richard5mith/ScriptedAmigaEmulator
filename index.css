@@ -21,3 +21,6 @@ dialog{color:var(--ink);border:1px solid #3d444e;border-radius:10px;box-shadow:0
 #saveRecovery{padding:0 22px 18px}.player-dialog.expanded #saveRecovery{display:none}#saveStatus{color:#a6b8a9}
 
 .choice-dialog{width:min(420px,calc(100vw - 32px));padding:28px}.choice-dialog h2{font-size:20px;margin:0 0 20px}.choice-actions{display:grid;gap:10px}.choice-actions .button{justify-content:center}.choice-dialog [role="alert"]{color:var(--ink);font-size:14px;margin:0 0 16px}
+
+/* The original canvas keeps mouse capture; the CRT pass is display only. */
+#myVideo .crt-source{opacity:0}#myVideo .crt-display{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;image-rendering:auto;max-width:none;max-height:none}

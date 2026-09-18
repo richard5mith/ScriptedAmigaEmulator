@@ -200,8 +200,8 @@
       active.identity=JSON.stringify({options,sourceMedia,rom:await SAESaves.hash(rom.data),build:SAEStateGlobals.build,version:SAEState.VERSION});
       let resume=null;
       if(checkpoint){
-        const compatible=checkpoint.identity===active.identity;
-        const decision=await chooseResume(checkpoint,compatible);
+        const differences=SAECRT.differences(checkpoint.identity,active.identity);
+        const decision=await chooseResume(checkpoint,differences);
         if(decision==='cancel'){await finishPlayer(token);return;}
         if(decision==='resume')resume=checkpoint;
       }
@@ -221,6 +221,7 @@
       cfg.hook.log.error=(code,message)=>{if(token===launchToken){$('playerError').hidden=false;$('playerError').textContent=message||'The emulator reported error '+code+'. Try another Amiga model in game settings.';}};
       cfg.hook.event.started=()=>{
         if(token!==launchToken)return;current.running=true;$('bootMessage').hidden=true;$('myVideo').focus();
+        if(options.picture==='crt'){active.crt?.destroy();active.crt=SAECRT.attach($('myVideo'),()=>toast('CRT filter unavailable. Showing the normal picture.'));}
         history[game.id]=Date.now();save('sae.library.history',history);game.error=null;
         if(current.disks.length>1){const select=$('diskSelect');select.replaceChildren();current.disks.forEach((disk,i)=>select.add(new Option(disk.name,String(i))));select.value=String(current.diskIndex);$('diskControl').hidden=false;}
       };
@@ -241,7 +242,7 @@
   }
   async function finishPlayer(token) {
     if(token!==launchToken||current.finishing)return;
-    const active=current;active.finishing=true;$('stopGame').disabled=true;
+    const active=current;active.crt?.destroy();active.finishing=true;$('stopGame').disabled=true;
     try {
       if(active.saves)await active.saves.flush();
       if(token!==launchToken)return;
@@ -256,11 +257,14 @@
     if(current.paused)emulator.pause(false);
     const error=emulator.stop();if(error!==SAEE_None)finishPlayer(current.token);
   }
-  function chooseResume(checkpoint,compatible){
+  function chooseResume(checkpoint,differences){
+    const compatible=differences.length===0;
+    const buildChanged=differences.length===1&&differences[0]==='Emulator build';
     return new Promise(resolve=>{
       const dialog=$('resumeDialog');
-      $('resumeState').disabled=!compatible;
-      $('resumeDetail').textContent=compatible?'Saved '+new Date(checkpoint.updatedAt).toLocaleString():'This position uses different settings or emulator files. You can still start normally.';
+      $('resumeState').disabled=!compatible&&!buildChanged;
+      $('resumeState').textContent=buildChanged?'Try restoring':'Continue playing';
+      $('resumeDetail').textContent=compatible?'Saved '+new Date(checkpoint.updatedAt).toLocaleString():buildChanged?'The emulator has changed since this was saved. You can try restoring, but it may not work.':'Cannot resume. Changed since saving: '+differences.join('; ')+'. You can still start normally.';
       const done=value=>{dialog.close();resolve(value);};
       $('resumeState').onclick=()=>done('resume');$('resumeFresh').onclick=()=>done('fresh');$('resumeCancel').onclick=()=>done('cancel');
       dialog.oncancel=event=>{event.preventDefault();done('cancel');};dialog.showModal();
