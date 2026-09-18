@@ -184,6 +184,7 @@ function SAEO_Blitter() {
 	var freezes = 10;
 	var warned1 = 10;
 	var warned2 = 10;
+	var copy_rows_remaining = 0, copy_row_cycles = 0;
 
 	/*-----------------------------------------------------------------------*/
 
@@ -194,6 +195,7 @@ function SAEO_Blitter() {
 	}
 
 	this.reset = function() { //blitter_reset()
+		copy_rows_remaining = 0;
 		bltptxpos = -1;
 		blit_diag_type = DT_NONE;
 
@@ -808,7 +810,7 @@ function SAEO_Blitter() {
 		blitter_done(SAER.events.current_hpos());
 	}
 
-	this.handler = function(data) { //blitter_handler
+	this.handler = function(data, finishCopy) { //blitter_handler
 		//static int blitter_stuck;
 
 		if (!SAEF_Custom_dmaen(SAEC_Custom_DMAF_BLTEN)) {
@@ -819,9 +821,26 @@ function SAEO_Blitter() {
 			//debugtest (DEBUGTEST_BLITTER, "force-unstuck!");
 		}
 		blitter_stuck = 0;
-		if (blit_slowdown > 0 && !immediate_blits) {
+		if (blit_slowdown > 0 && !immediate_blits && !(finishCopy && copy_rows_remaining)) {
 			SAER.events.event2_newevent(SAEC_Events_EV2_BLITTER, blit_slowdown, 0);
 			blit_slowdown = -1;
+			return;
+		}
+		if (copy_rows_remaining) {
+			var height = blt_info.vblitsize;
+			var rows = finishCopy ? copy_rows_remaining : 1;
+			blt_info.vblitsize = rows;
+			blitter_dofast();
+			blt_info.vblitsize = height;
+			copy_rows_remaining -= rows;
+			if (copy_rows_remaining) {
+				// dofast marks its slice done; the hardware job is still busy.
+				SAEV_Blitter_bltstate = SAEC_Blitter_bltstate_WORK;
+				blit_slowdown = 0;
+				SAER.events.event2_newevent(SAEC_Events_EV2_BLITTER, copy_row_cycles, 0);
+				return;
+			}
+			blitter_done(SAER.events.current_hpos());
 			return;
 		}
 		blitter_doit();
@@ -1353,6 +1372,7 @@ function SAEO_Blitter() {
 
 	function do_blitter2(hpos, copper) {
 		var cycles;
+		copy_rows_remaining = 0;
 
 		/*if ((log_blitter & 2)) {
 			if (SAEV_Blitter_bltstate != SAEC_Blitter_bltstate_DONE) {
@@ -1463,7 +1483,20 @@ function SAEO_Blitter() {
 		}
 
 		blit_cyclecounter = cycles * (blit_dmacount2 + (blit_nod ? 0 : 1));
-		SAER.events.event2_newevent(SAEC_Events_EV2_BLITTER, blit_cyclecounter, 0);
+		// Advance plain, disjoint A->D copies a row at a time. Deferring all
+		// writes until the end can overwrite buffers the CPU has already reused
+		// (SWOS loads a compressed team file while a long copy is in flight).
+		// Shifted, strided and overlapping jobs retain the bulk path: splitting
+		// those requires preserving shifter and DMA pipeline state across rows.
+		var copy_bytes = cycles * 2;
+		if (bltcon0 == 0x09f0 && bltcon1 == 0 && blt_info.vblitsize > 1 &&
+			blt_info.bltamod == 0 && blt_info.bltdmod == 0 && bltapt > 0 && bltdpt > 0 &&
+			bltapt + copy_bytes <= SAEV_Memory_chipMask + 1 && bltdpt + copy_bytes <= SAEV_Memory_chipMask + 1 &&
+			(bltapt + copy_bytes <= bltdpt || bltdpt + copy_bytes <= bltapt)) {
+			copy_rows_remaining = blt_info.vblitsize;
+			copy_row_cycles = blit_cyclecounter / copy_rows_remaining;
+		}
+		SAER.events.event2_newevent(SAEC_Events_EV2_BLITTER, copy_rows_remaining ? copy_row_cycles : blit_cyclecounter, 0);
 
 		if (SAEF_Custom_dmaen(SAEC_Custom_DMAF_BLTEN)) {
 			if (SAEV_config.chipset.blitter.waiting) {
@@ -1544,7 +1577,9 @@ function SAEO_Blitter() {
 			//if (log_blitter) blitter_delayed_debug = 1;
 			return;
 		}
-		SAER.blitter.handler(0);
+		// Register changes must finish every remaining slice before applying
+		// new pointers or control bits, just as the bulk path does.
+		SAER.blitter.handler(0, true);
 	}
 
 	this.check_is_blit_dangerous = function(bplpt, planes, words) {
