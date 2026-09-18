@@ -7,3 +7,8 @@ db/demos/index.htm
 *.bin
 scriptedamigaemulator.js
 scriptedamigaemulator.js.map
+.DS_Store
+games/
+bios/
+__pycache__/
+*.pyc

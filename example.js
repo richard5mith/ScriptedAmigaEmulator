@@ -97,7 +97,7 @@ function saee2text(err) {
 		case SAEE_Assert:							return "Assertiation failed.";
 		case SAEE_Internal:						return "Internal emulator error.";
 		case SAEE_Config_Invalid:				return "Invalid configuration.";
-		case SAEE_Config_Compressed:			return "A ZIP file was detected. Compressed files are not yet supported.";
+		case SAEE_Config_Compressed:			return "Prepare compressed media with SAEF_Archive.open() before passing it to the emulator.";
 		case SAEE_CPU_Internal:					return "Internal CPU-error.";
 		case SAEE_CPU_Requires68020:			return "The selected kickstart-rom does require a 68020 and 32bit address-space";
 		case SAEE_CPU_Requires680EC20:		return "The selected kickstart-rom does require a 68020.";
@@ -193,7 +193,7 @@ function setFloppyName(n) {
 	var e = document.getElementById("cfg_df"+n+"_name");
 	if (cfg.floppy.drive[n].file.size) {
 		e.className = "";
-		e.innerHTML = cfg.floppy.drive[n].file.name;
+		e.textContent = cfg.floppy.drive[n].file.name;
 		styleDisplayInline("cfg_df"+n+"_eject", 1);
 	} else {
 		e.className = "gray";
@@ -417,13 +417,13 @@ function romRemove() {
 function floppyInsert(n) {
 	var e = document.getElementById("cfg_df"+n+"_file").files[0];
 	if (e) {
-		loadFile(e, function(event) {
+		loadMediaFile(e, "floppy", function(media) {
 			var file = cfg.floppy.drive[n].file;
 			//file.path = e.path; currently unused in SAE
-			file.name = e.name; /* filename */
-			file.data = event.target.result; /* typeof 'String' or 'Uint8Array' */
-			file.size = e.size; /* size in bytes */
-			file.crc32 = crc32(event.target.result); /* pre-calculate crc32 for a faster start */
+			file.name = media.name; /* filename */
+			file.data = media.data; /* typeof 'String' or 'Uint8Array' */
+			file.size = media.size; /* size in bytes */
+			file.crc32 = crc32(media.data); /* pre-calculate crc32 for a faster start */
 			setFloppyName(n);
 
 			/*var di = new SAEO_DiskInfo();
