@@ -3533,7 +3533,7 @@ function SAEO_CPU() {
 					if (productLo) productLo = -productLo + 0x100000000;
 					if (productLo == 0) { productHi++; if (productHi > 0xffffffff) productHi -= 0x100000000; }
 				}
-				regs.v = (ext & 0x400) == 0 && (productHi != 0 || (productLo & 0x80000000) != 0) && ((productHi & 0xffffffff) != 0xffffffff || (productLo & 0x80000000) != 0x80000000);
+				regs.v = (ext & 0x400) == 0 && (productHi != 0 || (productLo & 0x80000000) != 0) && (productHi != 0xffffffff || (productLo & 0x80000000) == 0);
 				//SAEF_log("I_MULS64.L $%04x, %d * %d = [%08x:%08x] | v %d, PC %08x", ext, castLong(_a),castLong(_b), productHi,productLo, regs.v?1:0, getPC());
 			}
 		} else {
@@ -3552,8 +3552,8 @@ function SAEO_CPU() {
 		}
 		regs.d[Dl] = productLo;
 		if (ext & 0x400) regs.d[ext & 7] = productHi;
-		regs.n = (productHi & 0x80000000) != 0;
-		regs.z = productHi == 0 && productLo == 0;
+		regs.n = ((ext & 0x400 ? productHi : productLo) & 0x80000000) != 0;
+		regs.z = productLo == 0 && (!(ext & 0x400) || productHi == 0);
 		regs.c = false;
 
 		coreSyncPC();
@@ -3650,7 +3650,7 @@ function SAEO_CPU() {
 				var result = divu64(dividendHi, dividendLo, divisor);
 				quo = result[1];
 				rem = result[2];
-				if (result[0] || sign ? quo > 0x80000000 : quo > 0x7fffffff) {
+				if (result[0] || (sign ? quo > 0x80000000 : quo > 0x7fffffff)) {
 					regs.v = true;
 					//SAEF_log("I_DIVS64.L %d:%d / %d OVERFLOW", dividendHi,dividendLo,divisor);
 					coreSyncPC();
@@ -4674,106 +4674,103 @@ function SAEO_CPU() {
 	/* Shift and Rotate */
 
 	function I_ASL_32(p) {
-		var d = regs.d[p.Dy], _d = d;
+		var d = regs.d[p.Dy];
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			var sign = (d & 0x80000000) != 0;
-			var mask = ~((1 << (32 - n)) - 1) >>> 0;
-			//var mask = (0xffffffff << (31 - n)) >>> 0;
-			regs.x = regs.c = (d & (1 << (32-n))) != 0;
-			regs.v = sign ? (((d & mask) >>> 0) != mask) : (((d & mask) >>> 0) != 0);
-			//regs.v = ((d & mask) >>> 0) != mask && ((d & mask) >>> 0) != 0;
-			d = ((d << n) & 0xffffffff) >>> 0;
+			regs.x = regs.c = n <= 32 && ((d >>> (32 - n)) & 1) != 0;
+			// Overflow if any shifted-out bit differs from the final sign.
+			var mask = n >= 32 ? 0xffffffff : (0xffffffff << (31 - n)) >>> 0;
+			var bits = (d & mask) >>> 0;
+			regs.v = n >= 32 ? d != 0 : bits != 0 && bits != mask;
+			d = n >= 32 ? 0 : ((d << n) & 0xffffffff) >>> 0;
 			regs.d[p.Dy] = d;
-		} else regs.v = regs.c = false;
+		} else regs.c = false;
 		regs.n = (d & 0x80000000) != 0;
 		regs.z = d == 0;
-		//if (sign) SAEF_log(("I_ASL.L %08x << %d = %08x, sign %d, mask %x, V %d -> %08x", _d, n, d, sign?1:0, mask, regs.v?1:0, (_d & mask)>>>0));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_ASL_16(p) {
-		var d = regs.d[p.Dy] & 0xffff, _d = d;
+		var d = regs.d[p.Dy] & 0xffff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			var sign = (d & 0x8000) != 0;
-			var mask = ~((1 << (16 - n)) - 1) & 0xffff;
-			//var mask = (0xffff << (15 - n)) & 0xffff;
-			regs.x = regs.c = (d & (1 << (16-n))) != 0;
-			regs.v = sign ? (d & mask) != mask : (d & mask) != 0;
-			//regs.v = (d & mask) != mask && (d & mask) != 0;
-			d = ((d << n) & 0xffff) >>> 0;
+			regs.x = regs.c = n <= 16 && ((d >>> (16 - n)) & 1) != 0;
+			// Overflow if any shifted-out bit differs from the final sign.
+			var mask = n >= 16 ? 0xffff : (0xffff << (15 - n)) >>> 0;
+			mask &= 0xffff;
+			var bits = (d & mask) >>> 0;
+			regs.v = n >= 16 ? d != 0 : bits != 0 && bits != mask;
+			d = n >= 16 ? 0 : ((d << n) & 0xffff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffff0000) | d;
-		} else regs.v = regs.c = false;
+		} else regs.c = false;
 		regs.n = (d & 0x8000) != 0;
 		regs.z = d == 0;
-		//if (sign) SAEF_log(("I_ASL.W %08x << %d = %08x, sign %d, mask %x, V %d", _d, n, d, sign?1:0, mask, regs.v?1:0));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_ASL_8(p) {
-		var d = regs.d[p.Dy] & 0xff, _d = d;
+		var d = regs.d[p.Dy] & 0xff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			var sign = (d & 0x80) != 0;
-			var mask = ~((1 << (8 - n)) - 1) & 0xff;
-			//var mask = (0xff << (7 - n)) & 0xff;
-			regs.x = regs.c = (d & (1 << (8-n))) != 0;
-			regs.v = sign ? (d & mask) != mask : (d & mask) != 0;
-			//regs.v = (d & mask) != mask && (d & mask) != 0;
-			d = ((d << n) & 0xff) >>> 0;
+			regs.x = regs.c = n <= 8 && ((d >>> (8 - n)) & 1) != 0;
+			// Overflow if any shifted-out bit differs from the final sign.
+			var mask = n >= 8 ? 0xff : (0xff << (7 - n)) >>> 0;
+			mask &= 0xff;
+			var bits = (d & mask) >>> 0;
+			regs.v = n >= 8 ? d != 0 : bits != 0 && bits != mask;
+			d = n >= 8 ? 0 : ((d << n) & 0xff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffffff00) | d;
-		} else regs.v = regs.c = false;
+		} else regs.c = false;
 		regs.n = (d & 0x80) != 0;
 		regs.z = d == 0;
-		//if (sign) SAEF_log(("I_ASL.B %08x << %d = %08x, sign %d, mask %x, V %d", _d, n, d, sign?1:0, mask, regs.v?1:0));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_ASR_32(p) {
-		var d = regs.d[p.Dy], _d = d;
+		var d = regs.d[p.Dy];
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d = (d >> n) >>> 0; //js 32
+			var negative = (d & 0x80000000) != 0;
+			regs.x = regs.c = n >= 32 ? negative : ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 32 ? (negative ? 0xffffffff : 0) : ((d >> n) & 0xffffffff) >>> 0;
 			regs.d[p.Dy] = d;
 		} else regs.c = false;
 		regs.n = (d & 0x80000000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_ASR.L %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_ASR_16(p) {
-		var d = regs.d[p.Dy] & 0xffff, _d = d;
+		var d = regs.d[p.Dy] & 0xffff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d = extWord(d); d = ((d >> n) & 0xffff) >>> 0; //js 32
-			//d >>= n;
+			var negative = (d & 0x8000) != 0;
+			regs.x = regs.c = n >= 16 ? negative : ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 16 ? (negative ? 0xffff : 0) : (((d << 16 >> 16) >> n) & 0xffff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffff0000) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x8000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_ASR.W %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_ASR_8(p) {
-		var d = regs.d[p.Dy] & 0xff, _d = d;
+		var d = regs.d[p.Dy] & 0xff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d = extByte(d); d = ((d >> n) & 0xff) >>> 0; //js 32
-			//d >>= n;
+			var negative = (d & 0x80) != 0;
+			regs.x = regs.c = n >= 8 ? negative : ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 8 ? (negative ? 0xff : 0) : (((d << 24 >> 24) >> n) & 0xff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffffff00) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x80) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_ASR.B %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
@@ -4806,92 +4803,86 @@ function SAEO_CPU() {
 	}
 
 	function I_LSL_32(p) {
-		var d = regs.d[p.Dy], _d = d;
+		var d = regs.d[p.Dy];
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (32-n))) != 0;
-			d = ((d << n) & 0xffffffff) >>> 0;
+			regs.x = regs.c = n <= 32 && ((d >>> (32 - n)) & 1) != 0;
+			d = n >= 32 ? 0 : ((d << n) & 0xffffffff) >>> 0;
 			regs.d[p.Dy] = d;
 		} else regs.c = false;
 		regs.n = (d & 0x80000000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSL.L %08x << %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_LSL_16(p) {
-		var d = regs.d[p.Dy] & 0xffff, _d = d;
+		var d = regs.d[p.Dy] & 0xffff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (16-n))) != 0;
-			d = ((d << n) & 0xffff) >>> 0;
+			regs.x = regs.c = n <= 16 && ((d >>> (16 - n)) & 1) != 0;
+			d = n >= 16 ? 0 : ((d << n) & 0xffff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffff0000) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x8000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSL.W %08x << %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_LSL_8(p) {
-		var d = regs.d[p.Dy] & 0xff, _d = d;
+		var d = regs.d[p.Dy] & 0xff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (8-n))) != 0;
-			d = ((d << n) & 0xff) >>> 0;
+			regs.x = regs.c = n <= 8 && ((d >>> (8 - n)) & 1) != 0;
+			d = n >= 8 ? 0 : ((d << n) & 0xff) >>> 0;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffffff00) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x80) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSL.B %08x << %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_LSR_32(p) {
-		var d = regs.d[p.Dy], _d = d;
+		var d = regs.d[p.Dy];
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d = d >>> n;
+			regs.x = regs.c = n <= 32 && ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 32 ? 0 : d >>> n;
 			regs.d[p.Dy] = d;
 		} else regs.c = false;
 		regs.n = (d & 0x80000000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSR.L %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_LSR_16(p) {
-		var d = regs.d[p.Dy] & 0xffff, _d = d;
+		var d = regs.d[p.Dy] & 0xffff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d >>= n;
+			regs.x = regs.c = n <= 16 && ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 16 ? 0 : d >>> n;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffff0000) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x8000) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSR.W %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}
 	function I_LSR_8(p) {
-		var d = regs.d[p.Dy] & 0xff, _d = d;
+		var d = regs.d[p.Dy] & 0xff;
 		var n = p.ir ? regs.d[p.cr] & 63 : p.cr;
+		regs.v = false;
 		if (n) {
-			regs.x = regs.c = (d & (1 << (n-1))) != 0;
-			d >>= n;
+			regs.x = regs.c = n <= 8 && ((d >>> (n - 1)) & 1) != 0;
+			d = n >= 8 ? 0 : d >>> n;
 			regs.d[p.Dy] = (regs.d[p.Dy] & 0xffffff00) | d;
 		} else regs.c = false;
 		regs.n = (d & 0x80) != 0;
 		regs.z = d == 0;
-		regs.v = false;
-		//SAEF_log(("I_LSR.B %08x >> %d = %08x", _d, n, d));
 		coreSyncPC();
 		return [p.cyc[0]+2*n,p.cyc[1],p.cyc[2]];
 	}

@@ -54,3 +54,34 @@ test('legacy event pacing fields migrate without relaxing guest-device validatio
  other.nodes[other.nodes[other.root.ref].private.ref].props.push(['is_syncline',2]);
  assert.throws(()=>codec.decode(other,reg),/unexpected: is_syncline/);
 });
+test('checkpoint callback aliases resolve when a drawing pointer precedes its array slot on relaunch',()=>{
+ const vm=require('node:vm'),fs=require('node:fs');
+ const names=['audio','autoconf','blitter','cia','copper','cpu','custom','devices','disk','dongle','events','expansion','filesys','gayle','hardfile','ide','input','m68k','memory','parallel','playfield','rtc','serial'];
+ function machine(aliasFirst){
+  const row={value:42,clr(){this.value=0;}},state={dp_for_drawing:aliasFirst?row:null,line_decisions:[row]};
+  const devices=Object.fromEntries(names.map(name=>[name,{_saeState:{get:()=>({}),set(){},functions:()=>({})}}]));
+  devices.audio._saeState={get:()=>({used_freq:48000}),set(){}};
+  devices.playfield._saeState={get:()=>state,set:s=>Object.assign(state,s),functions:()=>({})};
+  devices.events.reset_frame_rate_hack=()=>{};
+  // The audio stub needs the same accessor interface as every real device.
+  devices.audio._saeState.functions=()=>({});
+  for(const device of Object.values(devices))Object.defineProperty(device,'_saeState',{enumerable:false});
+  return {devices,state,row};
+ }
+ const old=machine(false),ctx=vm.createContext({
+  SAER:{...old.devices,video:{},running:true,paused:true},
+  SAEV_config:{audio:{channels:2},video:{api:0},floppy:{drive:[]},mount:{config:[]}},
+  SAEStateGlobals:{get:()=>({}),set(){}},SAEV_command:0,SAEV_spcflags:0,SAEC_spcflag_MODE_CHANGE:1
+ });
+ vm.runInContext(fs.readFileSync('sae/state.js','utf8'),ctx);
+ assert.equal(ctx.SAEState.boot(),true);old.state.dp_for_drawing=old.row;
+ const snapshot=ctx.SAEState.capture(),fresh=machine(true);
+ Object.assign(ctx.SAER,fresh.devices);let restored=false;
+ ctx.SAEState.queue(snapshot,()=>{restored=true;},error=>{throw error;});
+ assert.equal(ctx.SAEState.boot(),true);assert.equal(restored,true);
+ assert.equal(fresh.state.dp_for_drawing,fresh.state.line_decisions[0]);
+ fresh.state.line_decisions[0].clr();assert.equal(fresh.state.line_decisions[0].value,0);
+ const second=ctx.SAEState.capture(),reloaded=machine(false);
+ Object.assign(ctx.SAER,reloaded.devices);ctx.SAEState.queue(second,()=>{},error=>{throw error;});
+ assert.equal(ctx.SAEState.boot(),true);assert.equal(reloaded.state.line_decisions[0].value,0);
+});

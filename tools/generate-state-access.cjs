@@ -9,9 +9,10 @@ const check = process.argv.includes('--check');
 const omit = {
   SAEO_Audio: ['driver','cache','scale','muted','paused','have_sound','sound_available'],
   SAEO_Joystick: ['requestID'],
+  SAEO_Keyboard: ['heldKeys'],
   SAEO_M68K: ['prevtime'],
   SAEO_CPU: ['iTab','ccTab','exEAtab','ldEA8tab','stEA8tab','ldEA16tab','stEA16tab','ldEA32tab','stEA32tab','regs_da','inst_mn'],
-  SAEO_Events: ['ma_frameskipt','ma_reflowt','fps_mavg','idle_mavg','frametime','lastframetime','idletime','vsyncmintime','vsyncmaxtime','vsyncwaittime','is_syncline','is_syncline_end']
+  SAEO_Events: ['frameResumeTime','ma_frameskipt','ma_reflowt','fps_mavg','idle_mavg','frametime','lastframetime','idletime','vsyncmintime','vsyncmaxtime','vsyncwaittime','is_syncline','is_syncline_end']
 };
 function write(path, source) {
   if (check) {

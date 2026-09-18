@@ -9,11 +9,20 @@ var SAEState = (function() {
   function prepare() {
     const functions=new Map(),byName=new Map(),anchors=new Map(),byAnchor=new Map(),externals=new Map(),byExternal=new Map(),seen=new Set();
     function visit(value,path) {
-      if(typeof value==='function'){if(!functions.has(value)){functions.set(value,path);byName.set(path,value);}return;}
-      if(!value||typeof value!=='object'||seen.has(value)||value instanceof ArrayBuffer||ArrayBuffer.isView(value))return;
+      if(typeof value==='function'){if(!functions.has(value))functions.set(value,path);byName.set(path,value);return;}
+      if(!value||typeof value!=='object'||value instanceof ArrayBuffer||ArrayBuffer.isView(value))return;
+      if(seen.has(value)){
+        // A transient pointer (e.g. dp_for_drawing) may visit a struct before
+        // its stable array slot. Accept both paths for its own callbacks.
+        for(const key of Object.keys(value))if(typeof value[key]==='function')visit(value[key],path+'/'+key);
+        return;
+      }
       seen.add(value);
       if(value._saeState){anchors.set(value,path);byAnchor.set(path,value);visit(value._saeState.functions(),path+'/functions');visit(value._saeState.get(),path+'/private');}
-      for(const key of Object.keys(value))visit(value[key],path+'/'+key);
+      // Visit owning arrays before transient aliases such as dp_for_drawing.
+      const keys=Object.keys(value);
+      for(const key of keys)if(Array.isArray(value[key]))visit(value[key],path+'/'+key);
+      for(const key of keys)if(!Array.isArray(value[key]))visit(value[key],path+'/'+key);
     }
     // Named local callbacks must have stable identities even if not scheduled yet.
     for(const key of components){const object=SAER[key];if(object._saeState)visit(object._saeState.functions(),'functions/'+key);}

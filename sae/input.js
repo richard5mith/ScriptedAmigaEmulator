@@ -644,10 +644,18 @@ function SAEO_Keyboard() {
 	var code = 0;
 	var first = 0, last = 0;
 	var capsLock = false;
+	var heldKeys = new Set();
 
 
 	function keydown(e) { newHandleKey(e, true); }
 	function keyup(e) { newHandleKey(e, false); }
+	function releaseKeys() {
+		for (const key of heldKeys) newProcessKey(key, false);
+		heldKeys.clear();
+	}
+	function visibilitychange() {
+		if (document.hidden) releaseKeys();
+	}
 	/*function fullscreenchange(e) {
 		SAEF_log("fullscreenchange()");
 	}*/
@@ -656,6 +664,8 @@ function SAEO_Keyboard() {
 		if (SAEV_config.keyboard.enabled) {
 			document.addEventListener("keydown", keydown, USECAPTURE);
 			document.addEventListener("keyup", keyup, USECAPTURE);
+			window.addEventListener("blur", releaseKeys);
+			document.addEventListener("visibilitychange", visibilitychange);
 			//document.addEventListener("webkitfullscreenchange", fullscreenchange);
 		}
 	};
@@ -664,6 +674,9 @@ function SAEO_Keyboard() {
 		if (SAEV_config.keyboard.enabled) {
 			document.removeEventListener("keydown", keydown, USECAPTURE);
 			document.removeEventListener("keyup", keyup, USECAPTURE);
+			window.removeEventListener("blur", releaseKeys);
+			document.removeEventListener("visibilitychange", visibilitychange);
+			heldKeys.clear();
 			//document.removeEventListener("webkitfullscreenchange", fullscreenchange);
 		}
 	};
@@ -676,6 +689,7 @@ function SAEO_Keyboard() {
 		state = 0;
 		code = 0;
 		first = last = 0;
+		heldKeys.clear();
 	};
 
 	this.keysAvail = function() {
@@ -1096,9 +1110,9 @@ function SAEO_Keyboard() {
 	function newHandleKey(e, down) {
 		e = e || window.event;
 
-		if (e.defaultPrevented)
+		if (e.defaultPrevented && (down || !heldKeys.has(e.code)))
 			return;
-		if (e.repeat) {
+		if (down && (e.repeat || heldKeys.has(e.code))) {
 			e.preventDefault();
 			return;
 		}
@@ -1107,6 +1121,7 @@ function SAEO_Keyboard() {
 
 		//SAEF_log("Keyboard.newHandleKey() down %d, code %s, loc %d, alt %d, shift %d, ctrl %d, meta %d", down?1:0, e.code, e.location, e.altKey?1:0, e.shiftKey?1:0, e.ctrlKey?1:0, e.metaKey?1:0);
 
+		if (down) heldKeys.add(e.code); else heldKeys.delete(e.code);
 		newProcessKey(e.code, down);
 
 		e.preventDefault();
@@ -1130,7 +1145,7 @@ function SAEO_Keyboard() {
 			capsLock=s.capsLock;
 		},
 		functions: function() { return {
-			keydown,keyup,recordKey,code2rawkey,newProcessKey,newHandleKey,
+			keydown,keyup,releaseKeys,visibilitychange,recordKey,code2rawkey,newProcessKey,newHandleKey,
 		}; },
 		constants: function() { return {
 			RAWKEY_TILDE,RAWKEY_1,RAWKEY_2,RAWKEY_3,RAWKEY_4,RAWKEY_5,RAWKEY_6,RAWKEY_7,RAWKEY_8,RAWKEY_9,
@@ -1854,15 +1869,29 @@ function SAEO_Input() {
 	/*---------------------------------*/
 
 	this.registerEvent = function(port, id, arg1, arg2) {
-		if (input_queue === null || SAER.paused)
+		if (input_queue === null || (SAER.paused && (id == SAEC_Input_Event_MouseMove || arg2)))
 			return;
+		// Coalesce pending host events before the next emulated scanline.
+		// Mouse deltas add; digital transitions retain their order.
+		for (var i = 0; i < INPUT_QUEUE_SIZE; i++) {
+			var pending = input_queue[i];
+			if (pending.linecnt < 0 || pending.port != port || pending.id != id) continue;
+			if (id == SAEC_Input_Event_MouseMove) {
+				pending.arg1 += arg1;
+				pending.arg2 += arg2;
+				return;
+			}
+		}
 		for (var idx = 0; idx < INPUT_QUEUE_SIZE; idx++) {
-			if (input_queue[idx].linecnt < 0)
-				break;
+			if (input_queue[idx].linecnt < 0) break;
 		}
 		if (idx == INPUT_QUEUE_SIZE) {
-			SAEF_warn("Input.registerEvent() queue overflow");
-			return;
+			// Never discard a release: apply pending events before accepting more.
+			for (var i = 0; i < INPUT_QUEUE_SIZE; i++) {
+				integrateEvent(input_queue[i]);
+				input_queue[i].linecnt = -1;
+			}
+			idx = 0;
 		}
 		var iq = input_queue[idx];
 		iq.port = port;

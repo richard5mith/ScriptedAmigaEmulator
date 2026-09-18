@@ -98,6 +98,7 @@ function SAEO_Events() {
 	//var syncbase = 0; -> SAEC_Events_syncbase
 	var vsyncmintime = 0, vsyncmaxtime = 0, vsyncwaittime = 0;
 	var vsynctimebase = 0;
+	var frameResumeTime = 0; // Host deadline, never part of a saved machine.
 	//var rpt_did_reset = 0;
 
 	//var frameskiptime = 0; -> SAEV_Events_frameskiptime
@@ -200,6 +201,8 @@ function SAEO_Events() {
 	/*-----------------------------------------------------------------------*/
 
 	this.reset_frame_rate_hack = function() {
+		frameResumeTime = 0;
+		vsyncwaittime = SAEF_now() + vsynctimebase;
 		if (SAEV_config.cpu.speed < 0) {
 			//rpt_did_reset = 1;
 			is_syncline = 0;
@@ -567,19 +570,11 @@ function SAEO_Events() {
 		}
 	}
 	this.framewait2_normal = function() {
-		vsyncmintime += vsynctimeperline;
-		//if (!vsync_isdone() && !currprefs.turbo_emulation)
-		{
-			var rpt = SAEF_now();
-			// sleep if more than 2ms "free" time
-			//while (!vsync_isdone() && vsyncmintime - Math.floor(rpt + vsynctimebase / 10) > 0 && vsyncmintime - rpt < vsynctimebase) {
-			while (vsyncmintime - Math.floor(rpt + vsynctimebase / 10) > 0 && vsyncmintime - rpt < vsynctimebase) {
-				//if (!execute_other_cpu(rpt + vsynctimebase / 10))
-				SAEF_sleep(1);
-				rpt = SAEF_now();
-				//SAEF_log("*");
-			}
-		}
+		// Host pacing happens after the completed frame, outside the CPU stack.
+	}
+
+	this.frame_delay = function() {
+		return Math.max(0, (frameResumeTime - SAEF_now()) / 1000);
 	}
 
 	/*---------------------------------*/
@@ -615,6 +610,7 @@ function SAEO_Events() {
 		var status = 0;
 
 		is_syncline = 0;
+		frameResumeTime = 0;
 
 		//static struct mavg_data ma_frameskipt;
 		var frameskipt_avg = ~~ma_frameskipt.set(SAEV_Events_frameskiptime); SAEV_Events_frameskiptime = 0;
@@ -632,17 +628,14 @@ function SAEO_Events() {
 			if (!SAEV_Playfield_frame_rendered && !SAEV_Playfield_picasso_on)
 				SAEV_Playfield_frame_rendered = SAER.video.render_screen(false);
 
+			curr_time = SAEF_now();
 			if (SAEV_config.cpu.speedThrottle) {
-				// this delay can safely overshoot frame time by 1-2 ms, following code will compensate for it.
-				for (;;) {
-					curr_time = SAEF_now();
-					if (vsyncwaittime - curr_time <= 0 || vsyncwaittime - curr_time > 2 * vsynctimebase)
-						break;
-					//rtg_vsynccheck();
-					SAEF_sleep(1);
+				if (vsyncwaittime > curr_time && vsyncwaittime - curr_time <= 2 * vsynctimebase) {
+					frameResumeTime = vsyncwaittime;
+					idletime += frameResumeTime - curr_time;
+					curr_time = frameResumeTime;
 				}
-			} else
-				curr_time = SAEF_now();
+			}
 
 			var adjust = 0, max;
 			if (curr_time - vsyncwaittime > 0 && curr_time - vsyncwaittime < (vstb >> 1))
@@ -665,7 +658,6 @@ function SAEO_Events() {
 
 			//SAEF_info("%06d:%06d/%06d", adjust, vsynctimeperline, vstb);
 		} else {
-			const syncbase1000inv = 1.0 / (SAEC_Events_syncbase / 1000); //OWN
 			var t = reflowt_avg; //OWN
 
 			if (!SAEV_Playfield_frame_rendered && !SAEV_Playfield_picasso_on) {
@@ -674,24 +666,19 @@ function SAEO_Events() {
 				t += SAEF_now() - start;
 			}
 			start = SAEF_now();
-			while (true) { //while (!currprefs.turbo_emulation) {
-				var v = rpt_vsync(clockadjust) * syncbase1000inv; //double
-				if (v >= -4) break;
-				//rtg_vsynccheck();
-				SAEF_sleep(2);
-			}
-			while (rpt_vsync(clockadjust) < 0) {
-				//rtg_vsynccheck();
-			}
-			curr_time = SAEF_now();
-			idletime += curr_time - start;
+			// Keep an absolute cadence so timer jitter does not accumulate. Rebase
+			// after a long suspension instead of trying to replay missed frames.
+			if (Math.abs(vsyncwaittime - start) > vstb) vsyncwaittime = start;
+			frameResumeTime = Math.max(start, vsyncwaittime);
+			curr_time = vsyncwaittime;
+			idletime += frameResumeTime - start;
 
 			vsyncmintime = curr_time;
 			vsyncmaxtime = vsyncwaittime = curr_time + vstb;
 
 			if (SAEV_Playfield_frame_rendered) {
 				SAER.video.show_screen(0);
-				t += SAEF_now() - curr_time;
+				t += SAEF_now() - start;
 			}
 			t += frameskipt_avg;
 			vsynctimeperline = ~~((vstb - t) / 3);

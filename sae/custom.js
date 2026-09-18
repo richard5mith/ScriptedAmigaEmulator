@@ -150,7 +150,7 @@ function SAEO_Custom() {
 	/*---------------------------------*/
 
 	function INTREQR() {
-		return SAEV_Custom_intreq;
+		return SAEV_Custom_intreq | SAER.cia.irq_mask();
 	}
 	this.INTREQ_0 = function(v) {
 		var old = SAEV_Custom_intreq;
@@ -228,7 +228,7 @@ function SAEO_Custom() {
 	}*/
 
 	this.intlev = function() {
-		var imask = intreq_internal & intena_internal;
+		var imask = (intreq_internal | SAER.cia.irq_mask()) & intena_internal;
 		/*if (irq_nmi) {
 			irq_nmi = 0;
 			return 7;

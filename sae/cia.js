@@ -119,8 +119,15 @@ function SAEO_CIA() {
 	}
 
 	this.rethink = function() { //rethink_cias()
-		if (ciaaicr & 0x40) ICRA();
-		if (ciabicr & 0x40) ICRB();
+		// An asserted pin contributes to INTREQR/intlev without re-latching INTREQ.
+		if (this.irq_mask()) SAER.m68k.doint();
+	}
+
+	this.irq_mask = function() {
+		var mask = (ciaaicr & 0x40) ? 0x0008 : 0;
+		if (ciabicr & 0x40)
+			mask |= SAEV_config.chipset.compatible == SAEC_Config_Chipset_Compatible_A1000V ? 0x0008 : 0x2000;
+		return mask;
 	}
 
 	/* Figure out how many CIA timer cycles have passed for each timer since the last call of CIA_calctimers.  */

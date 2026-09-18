@@ -166,3 +166,10 @@ Playwright, Python, and local Qwak/BIOS files. Set `PLAYWRIGHT_MODULE` and
 `CHROMIUM_EXECUTABLE` when they are installed outside this project. It verifies
 real disk writes, page reload restoration, backup download, deletion and cancellation,
 running-game protection, fresh launch after deletion, and stale-write rejection.
+
+The optional emulator regression test is `node tests/emulator.browser.cjs`, with the
+same Playwright/Chrome environment variables and local Qwak/BIOS requirements.
+It checks PAL frame cadence without busy waits, joystick releases after mouse
+bursts and focus loss, and checkpoint capture/resume. CPU arithmetic, CIA interrupt
+acknowledgment order, input queue pressure, and scheduler deadlines also have
+ROM-free regression tests in the standard Node test suite.

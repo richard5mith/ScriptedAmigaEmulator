@@ -136,7 +136,7 @@ function SAEO_M68K() {
 			var vpos = SAER.playfield.get_vpos();
 			if (vpos == 0 && haltloop_prevvpos) {
 				haltloop_prevvpos = false;
-				SAEF_sleep(8);
+				// The frame scheduler yields to the browser after this frame.
 			}
 			if (vpos)
 				haltloop_prevvpos = true;
@@ -181,6 +181,7 @@ function SAEO_M68K() {
 				SAEF_log("->resume");
 				SAER.pause_program(0);
 				SAER.paused = false;
+				SAER.events.reset_frame_rate_hack();
 				prevtime = false;
 			}
 		}
@@ -266,14 +267,15 @@ function SAEO_M68K() {
 			}
 
 			if (prevtime !== false) // && SAEV_config.cpu.speed >= 0)
-				SAEV_Events_reflowtime = SAEF_now() - prevtime;
+				SAEV_Events_reflowtime = Math.max(0, SAEF_now() - prevtime);
 
 			SAER_CPU_run_func();
 
 			//if (SAEV_config.cpu.speed >= 0)
-			prevtime = SAEF_now();
+			var delay = SAER.events.frame_delay();
+			prevtime = SAEF_now() + delay * 1000;
 
-			setTimeout(function() { SAER.m68k.m68k_cycle(hardboot, startup); }, 0);
+			setTimeout(function() { SAER.m68k.m68k_cycle(hardboot, startup); }, delay);
 		} catch(e) {
 			this.m68k_gone();
 			if (e instanceof SAEO_Error) {
